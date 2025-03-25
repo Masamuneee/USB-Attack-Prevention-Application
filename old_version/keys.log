@@ -1,0 +1,655 @@
+[2025-03-25 10:19:45] Key Pressed: C (67) - Interval: 3352ms 
+[2025-03-25 10:19:45] Key Pressed: L (76) - Interval: 196ms 
+[2025-03-25 10:19:45] Key Pressed: E (69) - Interval: 114ms 
+[2025-03-25 10:19:45] Key Pressed: A (65) - Interval: 102ms 
+[2025-03-25 10:19:45] Key Pressed: R (82) - Interval: 60ms 
+[2025-03-25 10:19:45] Key Pressed: Enter (13) - Interval: 98ms 
+[2025-03-25 10:19:46] Key Pressed: Unknown (190) - Interval: 367ms 
+[2025-03-25 10:19:46] Key Pressed: Unknown (191) - Interval: 286ms 
+[2025-03-25 10:19:47] Key Pressed: Backspace (8) - Interval: 714ms 
+[2025-03-25 10:19:47] Key Pressed: Backspace (8) - Interval: 162ms 
+[2025-03-25 10:19:47] Key Pressed: Backspace (8) - Interval: 139ms 
+[2025-03-25 10:19:47] Key Pressed: Unknown (190) - Interval: 281ms 
+[2025-03-25 10:19:47] Key Pressed: Unknown (191) - Interval: 222ms 
+[2025-03-25 10:19:48] Key Pressed: Backspace (8) - Interval: 288ms 
+[2025-03-25 10:19:48] Key Pressed: Backspace (8) - Interval: 149ms 
+[2025-03-25 10:19:48] Key Pressed: Backspace (8) - Interval: 133ms 
+[2025-03-25 10:19:48] Key Pressed: C (67) - Interval: 152ms 
+[2025-03-25 10:19:48] Key Pressed: D (68) - Interval: 54ms 
+[2025-03-25 10:19:48] Key Pressed: Space (32) - Interval: 159ms 
+[2025-03-25 10:19:49] Key Pressed: D (68) - Interval: 505ms 
+[2025-03-25 10:19:49] Key Pressed: Backspace (8) - Interval: 290ms 
+[2025-03-25 10:19:49] Key Pressed: F (70) - Interval: 123ms 
+[2025-03-25 10:19:49] Key Pressed: Tab (9) - Interval: 138ms 
+[2025-03-25 10:19:50] Key Pressed: Enter (13) - Interval: 267ms 
+[2025-03-25 10:19:51] Key Pressed: Unknown (190) - Interval: 1259ms 
+[2025-03-25 10:19:51] Key Pressed: Unknown (191) - Interval: 220ms 
+[2025-03-25 10:19:53] Key Pressed: M (77) - Interval: 1463ms 
+[2025-03-25 10:19:53] Key Pressed: Backspace (8) - Interval: 303ms 
+[2025-03-25 10:19:54] Key Pressed: U (85) - Interval: 557ms 
+[2025-03-25 10:19:54] Key Pressed: S (83) - Interval: 136ms 
+[2025-03-25 10:19:54] Key Pressed: Tab (9) - Interval: 174ms 
+[2025-03-25 10:19:54] Key Pressed: Enter (13) - Interval: 430ms 
+[2025-03-25 10:20:01] Key Pressed: N (78) - Interval: 7141ms 
+[2025-03-25 10:20:02] Key Pressed: O (79) - Interval: 225ms 
+[2025-03-25 10:20:02] Key Pressed: T (84) - Interval: 167ms 
+[2025-03-25 10:20:02] Key Pressed: E (69) - Interval: 58ms 
+[2025-03-25 10:20:02] Key Pressed: Enter (13) - Interval: 103ms 
+[2025-03-25 10:20:05] Key Pressed: A (65) - Interval: 2858ms 
+[2025-03-25 10:20:05] Key Pressed: S (83) - Interval: 33ms 
+[2025-03-25 10:20:05] Key Pressed: D (68) - Interval: 65ms 
+[2025-03-25 10:20:05] Key Pressed: A (65) - Interval: 81ms 
+[2025-03-25 10:20:05] Key Pressed: S (83) - Interval: 37ms 
+[2025-03-25 10:20:05] ALERT: POTENTIAL KEYSTROKE INJECTION ATTACK DETECTED!
+[2025-03-25 10:20:05] Key Pressed: A (65) - Interval: 322ms 
+[2025-03-25 10:20:06] Key Pressed: S (83) - Interval: 1020ms 
+[2025-03-25 10:20:06] Key Pressed: A (65) - Interval: 5ms 
+[2025-03-25 10:20:07] Key Pressed: D (68) - Interval: 87ms 
+[2025-03-25 10:20:07] Key Pressed: S (83) - Interval: 103ms 
+[2025-03-25 10:20:07] Key Pressed: A (65) - Interval: 30ms 
+[2025-03-25 10:20:07] Key Pressed: S (83) - Interval: 168ms 
+[2025-03-25 10:20:07] Key Pressed: A (65) - Interval: 27ms 
+[2025-03-25 10:20:07] Key Pressed: D (68) - Interval: 60ms 
+[2025-03-25 10:20:07] Key Pressed: S (83) - Interval: 328ms 
+[2025-03-25 10:20:07] Key Pressed: D (68) - Interval: 16ms 
+[2025-03-25 10:20:07] Key Pressed: F (70) - Interval: 99ms 
+[2025-03-25 10:20:07] Key Pressed: S (83) - Interval: 74ms 
+[2025-03-25 10:20:07] Key Pressed: D (68) - Interval: 53ms 
+[2025-03-25 10:20:08] ALERT: POTENTIAL KEYSTROKE INJECTION ATTACK DETECTED!
+[2025-03-25 10:20:08] Key Pressed: K (75) - Interval: 303ms 
+[2025-03-25 10:20:08] Key Pressed: S (83) - Interval: 98ms 
+[2025-03-25 10:20:08] Key Pressed: D (68) - Interval: 9ms 
+[2025-03-25 10:20:08] Key Pressed: S (83) - Interval: 115ms 
+[2025-03-25 10:20:08] Key Pressed: S (83) - Interval: 151ms 
+[2025-03-25 10:20:08] Key Pressed: S (83) - Interval: 146ms 
+[2025-03-25 10:20:09] Key Pressed: S (83) - Interval: 141ms 
+[2025-03-25 10:20:09] Key Pressed: S (83) - Interval: 132ms 
+[2025-03-25 10:20:17] Key Pressed: S (83) - Interval: 8397ms 
+[2025-03-25 10:20:17] Key Pressed: S (83) - Interval: 158ms 
+[2025-03-25 10:20:17] Key Pressed: S (83) - Interval: 126ms 
+[2025-03-25 10:20:17] Key Pressed: S (83) - Interval: 173ms 
+[2025-03-25 10:20:18] Key Pressed: Left Control (162) - Interval: 482ms 
+[2025-03-25 10:20:18] Key Pressed: Backspace (8) - Interval: 203ms 
+[2025-03-25 10:20:19] Key Pressed: Left Control (162) - Interval: 373ms 
+[2025-03-25 10:20:19] Key Pressed: A (65) - Interval: 70ms 
+[2025-03-25 10:20:19] Key Pressed: Backspace (8) - Interval: 126ms 
+[2025-03-25 10:20:20] Key Pressed: A (65) - Interval: 1180ms 
+[2025-03-25 10:20:20] Key Pressed: A (65) - Interval: 155ms 
+[2025-03-25 10:20:20] Key Pressed: A (65) - Interval: 145ms 
+[2025-03-25 10:20:21] Key Pressed: Backspace (8) - Interval: 585ms 
+[2025-03-25 10:20:21] Key Pressed: Backspace (8) - Interval: 179ms 
+[2025-03-25 10:20:21] Key Pressed: Backspace (8) - Interval: 141ms 
+[2025-03-25 10:20:21] Key Pressed: Backspace (8) - Interval: 149ms 
+[2025-03-25 10:20:22] Key Pressed: A (65) - Interval: 272ms 
+[2025-03-25 10:20:22] Key Pressed: A (65) - Interval: 148ms 
+[2025-03-25 10:20:22] Key Pressed: S (83) - Interval: 201ms 
+[2025-03-25 10:20:22] Key Pressed: D (68) - Interval: 108ms 
+[2025-03-25 10:20:22] Key Pressed: A (65) - Interval: 173ms 
+[2025-03-25 10:20:22] Key Pressed: S (83) - Interval: 115ms 
+[2025-03-25 10:20:22] Key Pressed: D (68) - Interval: 31ms 
+[2025-03-25 10:20:22] Key Pressed: A (65) - Interval: 114ms 
+[2025-03-25 10:20:23] Key Pressed: Enter (13) - Interval: 343ms 
+[2025-03-25 10:20:23] Key Pressed: A (65) - Interval: 401ms 
+[2025-03-25 10:20:23] Key Pressed: S (83) - Interval: 64ms 
+[2025-03-25 10:20:23] Key Pressed: D (68) - Interval: 20ms 
+[2025-03-25 10:20:23] Key Pressed: A (65) - Interval: 98ms 
+[2025-03-25 10:20:23] Key Pressed: D (68) - Interval: 81ms 
+[2025-03-25 10:20:24] ALERT: POTENTIAL KEYSTROKE INJECTION ATTACK DETECTED!
+[2025-03-25 10:20:24] Key Pressed: A (65) - Interval: 315ms 
+[2025-03-25 10:20:24] Key Pressed: S (83) - Interval: 0ms 
+[2025-03-25 10:20:24] Key Pressed: D (68) - Interval: 1ms 
+[2025-03-25 10:20:24] Key Pressed: S (83) - Interval: 93ms 
+[2025-03-25 10:20:24] Key Pressed: D (68) - Interval: 70ms 
+[2025-03-25 10:20:24] ALERT: POTENTIAL KEYSTROKE INJECTION ATTACK DETECTED!
+[2025-03-25 10:20:24] Key Pressed: Enter (13) - Interval: 307ms 
+[2025-03-25 10:20:24] Key Pressed: S (83) - Interval: 1ms 
+[2025-03-25 10:20:24] Key Pressed: D (68) - Interval: 2ms 
+[2025-03-25 10:20:24] Key Pressed: F (70) - Interval: 1ms 
+[2025-03-25 10:20:24] Key Pressed: Enter (13) - Interval: 1ms 
+[2025-03-25 10:20:24] ALERT: POTENTIAL KEYSTROKE INJECTION ATTACK DETECTED!
+[2025-03-25 10:20:25] Key Pressed: S (83) - Interval: 317ms 
+[2025-03-25 10:20:25] Key Pressed: F (70) - Interval: 5ms 
+[2025-03-25 10:20:25] Key Pressed: Enter (13) - Interval: 0ms 
+[2025-03-25 10:20:25] Key Pressed: A (65) - Interval: 2ms 
+[2025-03-25 10:20:25] Key Pressed: S (83) - Interval: 2ms 
+[2025-03-25 10:20:25] ALERT: POTENTIAL KEYSTROKE INJECTION ATTACK DETECTED!
+[2025-03-25 10:20:25] Key Pressed: F (70) - Interval: 307ms 
+[2025-03-25 10:20:25] Key Pressed: A (65) - Interval: 1ms 
+[2025-03-25 10:20:25] Key Pressed: S (83) - Interval: 1ms 
+[2025-03-25 10:20:25] Key Pressed: Enter (13) - Interval: 2ms 
+[2025-03-25 10:20:25] Key Pressed: F (70) - Interval: 1ms 
+[2025-03-25 10:20:25] ALERT: POTENTIAL KEYSTROKE INJECTION ATTACK DETECTED!
+[2025-03-25 10:20:25] Key Pressed: S (83) - Interval: 305ms 
+[2025-03-25 10:20:25] Key Pressed: Left Control (162) - Interval: 188ms 
+[2025-03-25 10:20:26] Key Pressed: C (67) - Interval: 187ms 
+[2025-03-25 10:20:26] Key Pressed: C (67) - Interval: 537ms 
+[2025-03-25 10:20:26] Key Pressed: L (76) - Interval: 141ms 
+[2025-03-25 10:20:26] Key Pressed: E (69) - Interval: 113ms 
+[2025-03-25 10:20:27] Key Pressed: A (65) - Interval: 37ms 
+[2025-03-25 10:20:27] Key Pressed: R (82) - Interval: 93ms 
+[2025-03-25 10:20:27] Key Pressed: Enter (13) - Interval: 195ms 
+[2025-03-25 10:20:27] Key Pressed: Left Alt (164) - Interval: 295ms 
+[2025-03-25 10:20:27] Key Pressed: Tab (9) - Interval: 87ms 
+[2025-03-25 10:20:30] Key Pressed: A (65) - Interval: 18ms 
+[2025-03-25 10:20:30] Key Pressed: Left Alt (164) - Interval: 2928ms 
+[2025-03-25 10:20:30] Key Pressed: Tab (9) - Interval: 70ms 
+[2025-03-25 10:20:33] Key Pressed: Left Alt (164) - Interval: 2657ms 
+[2025-03-25 10:20:33] Key Pressed: Tab (9) - Interval: 60ms 
+[2025-03-25 10:20:34] Key Pressed: Enter (13) - Interval: 11ms 
+[2025-03-25 10:20:36] Key Pressed: A (65) - Interval: 2ms 
+[2025-03-25 10:20:36] Key Pressed: F (70) - Interval: 32ms 
+[2025-03-25 10:20:37] Key Pressed: Enter (13) - Interval: 38ms 
+[2025-03-25 10:20:37] Key Pressed: F (70) - Interval: 64ms 
+[2025-03-25 10:20:37] Key Pressed: D (68) - Interval: 49ms 
+[2025-03-25 10:20:45] Key Pressed: Unknown (190) - Interval: 11943ms 
+[2025-03-25 10:20:45] Key Pressed: Unknown (191) - Interval: 169ms 
+[2025-03-25 10:20:46] Key Pressed: Right Arrow (39) - Interval: 872ms 
+[2025-03-25 10:20:46] Key Pressed: Enter (13) - Interval: 335ms 
+[2025-03-25 10:20:48] Key Pressed: Left Alt (164) - Interval: 2126ms 
+[2025-03-25 10:20:48] Key Pressed: Tab (9) - Interval: 60ms 
+[2025-03-25 10:20:50] Key Pressed: Left Control (162) - Interval: 1399ms 
+[2025-03-25 10:20:50] Key Pressed: A (65) - Interval: 336ms 
+[2025-03-25 10:20:50] Key Pressed: Delete (46) - Interval: 262ms 
+[2025-03-25 10:20:51] Key Pressed: A (65) - Interval: 154ms 
+[2025-03-25 10:20:51] Key Pressed: S (83) - Interval: 36ms 
+[2025-03-25 10:20:51] Key Pressed: D (68) - Interval: 91ms 
+[2025-03-25 10:20:51] Key Pressed: A (65) - Interval: 109ms 
+[2025-03-25 10:20:51] Key Pressed: S (83) - Interval: 16ms 
+[2025-03-25 10:20:51] Key Pressed: D (68) - Interval: 80ms 
+[2025-03-25 10:20:51] Key Pressed: S (83) - Interval: 92ms 
+[2025-03-25 10:20:51] Key Pressed: A (65) - Interval: 5ms 
+[2025-03-25 10:20:51] ALERT: POTENTIAL KEYSTROKE INJECTION ATTACK DETECTED!
+[2025-03-25 10:20:51] Key Pressed: A (65) - Interval: 318ms 
+[2025-03-25 10:20:51] Key Pressed: S (83) - Interval: 1ms 
+[2025-03-25 10:20:51] Key Pressed: D (68) - Interval: 1ms 
+[2025-03-25 10:20:51] Key Pressed: F (70) - Interval: 0ms 
+[2025-03-25 10:20:51] Key Pressed: S (83) - Interval: 3ms 
+[2025-03-25 10:20:51] ALERT: POTENTIAL KEYSTROKE INJECTION ATTACK DETECTED!
+[2025-03-25 10:20:54] Key Pressed: A (65) - Interval: 1ms 
+[2025-03-25 10:20:56] Key Pressed: D (68) - Interval: 75ms 
+[2025-03-25 10:20:58] Key Pressed: Left Control (162) - Interval: 7062ms 
+[2025-03-25 10:20:59] Key Pressed: A (65) - Interval: 82ms 
+[2025-03-25 10:20:59] Key Pressed: Backspace (8) - Interval: 326ms 
+[2025-03-25 10:20:59] Key Pressed: Backspace (8) - Interval: 256ms 
+[2025-03-25 10:21:22] Key Pressed: Left Alt (164) - Interval: 22606ms 
+[2025-03-25 10:21:22] Key Pressed: Tab (9) - Interval: 147ms 
+[2025-03-25 10:21:23] Key Pressed: Tab (9) - Interval: 1428ms 
+[2025-03-25 10:21:24] Key Pressed: Tab (9) - Interval: 304ms 
+[2025-03-25 10:21:24] Key Pressed: Tab (9) - Interval: 174ms 
+[2025-03-25 10:21:51] Key Pressed: Left Alt (164) - Interval: 26844ms 
+[2025-03-25 10:21:51] Key Pressed: Tab (9) - Interval: 91ms 
+[2025-03-25 10:21:51] Key Pressed: Left Alt (164) - Interval: 303ms 
+[2025-03-25 10:21:51] Key Pressed: Tab (9) - Interval: 44ms 
+[2025-03-25 10:21:54] Key Pressed: Left Alt (164) - Interval: 3148ms 
+[2025-03-25 10:21:54] Key Pressed: Tab (9) - Interval: 71ms 
+[2025-03-25 10:21:55] Key Pressed: Left Alt (164) - Interval: 457ms 
+[2025-03-25 10:21:55] Key Pressed: Tab (9) - Interval: 86ms 
+[2025-03-25 10:21:55] Key Pressed: Left Alt (164) - Interval: 287ms 
+[2025-03-25 10:21:55] Key Pressed: Tab (9) - Interval: 67ms 
+[2025-03-25 10:22:16] Key Pressed: Left Alt (164) - Interval: 20859ms 
+[2025-03-25 10:22:16] Key Pressed: Tab (9) - Interval: 115ms 
+[2025-03-25 10:22:22] Key Pressed: Left Alt (164) - Interval: 6233ms 
+[2025-03-25 10:22:22] Key Pressed: Tab (9) - Interval: 60ms 
+[2025-03-25 10:22:23] Key Pressed: Left Alt (164) - Interval: 589ms 
+[2025-03-25 10:22:23] Key Pressed: Tab (9) - Interval: 47ms 
+[2025-03-25 10:22:23] Key Pressed: Left Alt (164) - Interval: 388ms 
+[2025-03-25 10:22:24] Key Pressed: Tab (9) - Interval: 61ms 
+[2025-03-25 10:22:24] Key Pressed: Left Control (162) - Interval: 393ms 
+[2025-03-25 10:22:24] Key Pressed: C (67) - Interval: 151ms 
+[2025-03-25 10:22:25] Key Pressed: C (67) - Interval: 628ms 
+[2025-03-25 10:22:25] Key Pressed: L (76) - Interval: 338ms 
+[2025-03-25 10:22:25] Key Pressed: E (69) - Interval: 271ms 
+[2025-03-25 10:22:25] Key Pressed: A (65) - Interval: 114ms 
+[2025-03-25 10:22:26] Key Pressed: R (82) - Interval: 65ms 
+[2025-03-25 10:22:26] Key Pressed: Enter (13) - Interval: 217ms 
+[2025-03-25 10:22:33] Key Pressed: Left Alt (164) - Interval: 7592ms 
+[2025-03-25 10:22:33] Key Pressed: Tab (9) - Interval: 102ms 
+[2025-03-25 10:22:35] Key Pressed: Tab (9) - Interval: 1913ms 
+[2025-03-25 10:22:36] Key Pressed: Left Alt (164) - Interval: 234ms 
+[2025-03-25 10:22:41] Key Pressed: Left Alt (164) - Interval: 5653ms 
+[2025-03-25 10:22:41] Key Pressed: Tab (9) - Interval: 81ms 
+[2025-03-25 10:22:43] Key Pressed: Left Alt (164) - Interval: 1733ms 
+[2025-03-25 10:22:43] Key Pressed: Tab (9) - Interval: 89ms 
+[2025-03-25 10:22:47] Key Pressed: Left Alt (164) - Interval: 3592ms 
+[2025-03-25 10:22:47] Key Pressed: Tab (9) - Interval: 91ms 
+[2025-03-25 10:22:48] Key Pressed: Left Alt (164) - Interval: 1399ms 
+[2025-03-25 10:22:48] Key Pressed: Tab (9) - Interval: 70ms 
+[2025-03-25 10:22:55] Key Pressed: Left Control (162) - Interval: 6732ms 
+[2025-03-25 10:22:55] Key Pressed: A (65) - Interval: 154ms 
+[2025-03-25 10:22:56] Key Pressed: C (67) - Interval: 678ms 
+[2025-03-25 10:22:56] Key Pressed: Left Alt (164) - Interval: 346ms 
+[2025-03-25 10:22:56] Key Pressed: Tab (9) - Interval: 71ms 
+[2025-03-25 10:22:57] Key Pressed: Left Alt (164) - Interval: 328ms 
+[2025-03-25 10:22:57] Key Pressed: Tab (9) - Interval: 50ms 
+[2025-03-25 10:22:57] Key Pressed: Tab (9) - Interval: 216ms 
+[2025-03-25 10:22:59] Key Pressed: Left Alt (164) - Interval: 2017ms 
+[2025-03-25 10:22:59] Key Pressed: Tab (9) - Interval: 65ms 
+[2025-03-25 10:23:27] Key Pressed: G (71) - Interval: 27783ms 
+[2025-03-25 10:23:27] Key Pressed: I (73) - Interval: 142ms 
+[2025-03-25 10:23:27] Key Pressed: T (84) - Interval: 161ms 
+[2025-03-25 10:23:27] Key Pressed: H (72) - Interval: 187ms 
+[2025-03-25 10:23:27] Key Pressed: U (85) - Interval: 90ms 
+[2025-03-25 10:23:27] Key Pressed: B (66) - Interval: 125ms 
+[2025-03-25 10:23:28] Key Pressed: Backspace (8) - Interval: 713ms 
+[2025-03-25 10:23:29] Key Pressed: Unknown (190) - Interval: 826ms 
+[2025-03-25 10:23:29] Key Pressed: C (67) - Interval: 340ms 
+[2025-03-25 10:23:29] Key Pressed: O (79) - Interval: 125ms 
+[2025-03-25 10:23:30] Key Pressed: M (77) - Interval: 280ms 
+[2025-03-25 10:23:30] Key Pressed: Backspace (8) - Interval: 700ms 
+[2025-03-25 10:23:32] Key Pressed: Left Control (162) - Interval: 1135ms 
+[2025-03-25 10:23:32] Key Pressed: A (65) - Interval: 117ms 
+[2025-03-25 10:23:32] Key Pressed: Backspace (8) - Interval: 250ms 
+[2025-03-25 10:23:33] Key Pressed: H (72) - Interval: 695ms 
+[2025-03-25 10:23:33] Key Pressed: O (79) - Interval: 142ms 
+[2025-03-25 10:23:33] Key Pressed: W (87) - Interval: 114ms 
+[2025-03-25 10:23:33] Key Pressed: Space (32) - Interval: 159ms 
+[2025-03-25 10:23:33] Key Pressed: T (84) - Interval: 164ms 
+[2025-03-25 10:23:33] Key Pressed: O (79) - Interval: 178ms 
+[2025-03-25 10:23:33] Key Pressed: Space (32) - Interval: 33ms 
+[2025-03-25 10:23:34] Key Pressed: C (67) - Interval: 314ms 
+[2025-03-25 10:23:34] Key Pressed: R (82) - Interval: 231ms 
+[2025-03-25 10:23:34] Key Pressed: E (69) - Interval: 130ms 
+[2025-03-25 10:23:34] Key Pressed: A (65) - Interval: 137ms 
+[2025-03-25 10:23:35] Key Pressed: T (84) - Interval: 310ms 
+[2025-03-25 10:23:35] Key Pressed: E (69) - Interval: 79ms 
+[2025-03-25 10:23:35] Key Pressed: Space (32) - Interval: 372ms 
+[2025-03-25 10:23:36] Key Pressed: G (71) - Interval: 1189ms 
+[2025-03-25 10:23:36] Key Pressed: I (73) - Interval: 123ms 
+[2025-03-25 10:23:36] Key Pressed: T (84) - Interval: 159ms 
+[2025-03-25 10:23:38] Key Pressed: Space (32) - Interval: 1557ms 
+[2025-03-25 10:23:38] Key Pressed: A (65) - Interval: 464ms 
+[2025-03-25 10:23:39] Key Pressed: Backspace (8) - Interval: 482ms 
+[2025-03-25 10:23:39] Key Pressed: I (73) - Interval: 218ms 
+[2025-03-25 10:23:39] Key Pressed: N (78) - Interval: 198ms 
+[2025-03-25 10:23:40] Key Pressed: Space (32) - Interval: 119ms 
+[2025-03-25 10:23:40] Key Pressed: F (70) - Interval: 158ms 
+[2025-03-25 10:23:40] Key Pressed: O (79) - Interval: 172ms 
+[2025-03-25 10:23:41] Key Pressed: Down Arrow (40) - Interval: 859ms 
+[2025-03-25 10:23:41] Key Pressed: Enter (13) - Interval: 530ms 
+[2025-03-25 10:23:59] Key Pressed: Left Control (162) - Interval: 17470ms 
+[2025-03-25 10:23:59] Key Pressed: C (67) - Interval: 117ms 
+[2025-03-25 10:23:59] Key Pressed: Left Alt (164) - Interval: 432ms 
+[2025-03-25 10:23:59] Key Pressed: Tab (9) - Interval: 70ms 
+[2025-03-25 10:24:00] Key Pressed: Space (32) - Interval: 610ms 
+[2025-03-25 10:24:00] Key Pressed: Tab (9) - Interval: 45ms 
+[2025-03-25 10:24:00] Key Pressed: Left Alt (164) - Interval: 234ms 
+[2025-03-25 10:24:00] Key Pressed: Tab (9) - Interval: 42ms 
+[2025-03-25 10:24:01] Key Pressed: Tab (9) - Interval: 479ms 
+[2025-03-25 10:24:02] Key Pressed: G (71) - Interval: 1513ms 
+[2025-03-25 10:24:02] Key Pressed: I (73) - Interval: 108ms 
+[2025-03-25 10:24:03] Key Pressed: T (84) - Interval: 189ms 
+[2025-03-25 10:24:03] Key Pressed: Backspace (8) - Interval: 220ms 
+[2025-03-25 10:24:03] Key Pressed: Backspace (8) - Interval: 180ms 
+[2025-03-25 10:24:03] Key Pressed: Backspace (8) - Interval: 158ms 
+[2025-03-25 10:24:03] Key Pressed: Backspace (8) - Interval: 163ms 
+[2025-03-25 10:24:15] Key Pressed: D (68) - Interval: 11308ms 
+[2025-03-25 10:24:15] Key Pressed: E (69) - Interval: 108ms 
+[2025-03-25 10:24:15] Key Pressed: Backspace (8) - Interval: 222ms 
+[2025-03-25 10:24:15] Key Pressed: Backspace (8) - Interval: 164ms 
+[2025-03-25 10:24:15] Key Pressed: D (68) - Interval: 239ms 
+[2025-03-25 10:24:15] Key Pressed: E (69) - Interval: 65ms 
+[2025-03-25 10:24:16] Key Pressed: Backspace (8) - Interval: 212ms 
+[2025-03-25 10:24:16] Key Pressed: Backspace (8) - Interval: 221ms 
+[2025-03-25 10:24:16] Key Pressed: R (82) - Interval: 626ms 
+[2025-03-25 10:24:17] Key Pressed: E (69) - Interval: 113ms 
+[2025-03-25 10:24:17] Key Pressed: Backspace (8) - Interval: 410ms 
+[2025-03-25 10:24:17] Key Pressed: Backspace (8) - Interval: 162ms 
+[2025-03-25 10:24:18] Key Pressed: D (68) - Interval: 1065ms 
+[2025-03-25 10:24:18] Key Pressed: E (69) - Interval: 97ms 
+[2025-03-25 10:24:19] Key Pressed: Backspace (8) - Interval: 226ms 
+[2025-03-25 10:24:19] Key Pressed: Backspace (8) - Interval: 139ms 
+[2025-03-25 10:24:19] Key Pressed: O (79) - Interval: 171ms 
+[2025-03-25 10:24:19] Key Pressed: L (76) - Interval: 183ms 
+[2025-03-25 10:24:19] Key Pressed: D (68) - Interval: 70ms 
+[2025-03-25 10:24:19] Key Pressed: Left Shift (160) - Interval: 268ms 
+[2025-03-25 10:24:19] Key Pressed: Unknown (189) - Interval: 59ms 
+[2025-03-25 10:24:20] Key Pressed: R (82) - Interval: 259ms 
+[2025-03-25 10:24:20] Key Pressed: E (69) - Interval: 70ms 
+[2025-03-25 10:24:20] Key Pressed: P (80) - Interval: 217ms 
+[2025-03-25 10:24:20] Key Pressed: O (79) - Interval: 192ms 
+[2025-03-25 10:24:20] Key Pressed: R (82) - Interval: 79ms 
+[2025-03-25 10:24:20] Key Pressed: T (84) - Interval: 175ms 
+[2025-03-25 10:24:22] Key Pressed: Enter (13) - Interval: 1266ms 
+[2025-03-25 10:24:25] Key Pressed: Left Shift (160) - Interval: 3756ms 
+[2025-03-25 10:24:26] Key Pressed: R (82) - Interval: 131ms 
+[2025-03-25 10:24:26] Key Pressed: E (69) - Interval: 109ms 
+[2025-03-25 10:24:26] Key Pressed: Backspace (8) - Interval: 273ms 
+[2025-03-25 10:24:26] Key Pressed: Backspace (8) - Interval: 146ms 
+[2025-03-25 10:24:26] Key Pressed: R (82) - Interval: 103ms 
+[2025-03-25 10:24:26] Key Pressed: E (69) - Interval: 50ms 
+[2025-03-25 10:24:26] Key Pressed: F (70) - Interval: 249ms 
+[2025-03-25 10:24:27] Key Pressed: E (69) - Interval: 336ms 
+[2025-03-25 10:24:27] Key Pressed: R (82) - Interval: 53ms 
+[2025-03-25 10:24:27] Key Pressed: N (78) - Interval: 582ms 
+[2025-03-25 10:24:28] Key Pressed: Backspace (8) - Interval: 332ms 
+[2025-03-25 10:24:28] Key Pressed: E (69) - Interval: 130ms 
+[2025-03-25 10:24:28] Key Pressed: N (78) - Interval: 129ms 
+[2025-03-25 10:24:28] Key Pressed: C (67) - Interval: 99ms 
+[2025-03-25 10:24:28] Key Pressed: E (69) - Interval: 85ms 
+[2025-03-25 10:24:28] Key Pressed: S (83) - Interval: 196ms 
+[2025-03-25 10:24:29] Key Pressed: Backspace (8) - Interval: 992ms 
+[2025-03-25 10:24:30] Key Pressed: Enter (13) - Interval: 432ms 
+[2025-03-25 10:24:33] Key Pressed: Right Arrow (39) - Interval: 3610ms 
+[2025-03-25 10:24:34] Key Pressed: S (83) - Interval: 284ms 
+[2025-03-25 10:24:34] Key Pressed: Enter (13) - Interval: 166ms 
+[2025-03-25 10:24:44] Key Pressed: D (68) - Interval: 10175ms 
+[2025-03-25 10:24:44] Key Pressed: E (69) - Interval: 86ms 
+[2025-03-25 10:24:44] Key Pressed: Backspace (8) - Interval: 237ms 
+[2025-03-25 10:24:45] Key Pressed: Backspace (8) - Interval: 164ms 
+[2025-03-25 10:24:45] Key Pressed: R (82) - Interval: 380ms 
+[2025-03-25 10:24:45] Key Pressed: E (69) - Interval: 93ms 
+[2025-03-25 10:24:45] Key Pressed: Backspace (8) - Interval: 144ms 
+[2025-03-25 10:24:45] Key Pressed: Backspace (8) - Interval: 159ms 
+[2025-03-25 10:24:46] Key Pressed: D (68) - Interval: 903ms 
+[2025-03-25 10:24:46] Key Pressed: E (69) - Interval: 75ms 
+[2025-03-25 10:24:47] Key Pressed: Backspace (8) - Interval: 166ms 
+[2025-03-25 10:24:47] Key Pressed: Backspace (8) - Interval: 184ms 
+[2025-03-25 10:24:48] Key Pressed: O (79) - Interval: 1405ms 
+[2025-03-25 10:24:48] Key Pressed: L (76) - Interval: 202ms 
+[2025-03-25 10:24:48] Key Pressed: D (68) - Interval: 146ms 
+[2025-03-25 10:24:49] Key Pressed: Left Shift (160) - Interval: 300ms 
+[2025-03-25 10:24:49] Key Pressed: Unknown (189) - Interval: 136ms 
+[2025-03-25 10:24:49] Key Pressed: V (86) - Interval: 321ms 
+[2025-03-25 10:24:49] Key Pressed: E (69) - Interval: 223ms 
+[2025-03-25 10:24:50] Key Pressed: R (82) - Interval: 97ms 
+[2025-03-25 10:24:50] Key Pressed: S (83) - Interval: 205ms 
+[2025-03-25 10:24:50] Key Pressed: I (73) - Interval: 120ms 
+[2025-03-25 10:24:50] Key Pressed: O (79) - Interval: 184ms 
+[2025-03-25 10:24:50] Key Pressed: Backspace (8) - Interval: 329ms 
+[2025-03-25 10:24:51] Key Pressed: O (79) - Interval: 703ms 
+[2025-03-25 10:24:51] Key Pressed: N (78) - Interval: 176ms 
+[2025-03-25 10:24:54] Key Pressed: Backspace (8) - Interval: 2604ms 
+[2025-03-25 10:24:54] Key Pressed: Backspace (8) - Interval: 518ms 
+[2025-03-25 10:24:54] Key Pressed: Backspace (8) - Interval: 33ms 
+[2025-03-25 10:24:54] Key Pressed: Backspace (8) - Interval: 33ms 
+[2025-03-25 10:24:54] Key Pressed: Backspace (8) - Interval: 34ms 
+[2025-03-25 10:24:55] Key Pressed: Backspace (8) - Interval: 33ms 
+[2025-03-25 10:24:55] Key Pressed: Backspace (8) - Interval: 163ms 
+[2025-03-25 10:24:55] Key Pressed: Backspace (8) - Interval: 162ms 
+[2025-03-25 10:24:55] Key Pressed: Backspace (8) - Interval: 148ms 
+[2025-03-25 10:24:55] Key Pressed: Backspace (8) - Interval: 161ms 
+[2025-03-25 10:24:55] Key Pressed: Backspace (8) - Interval: 156ms 
+[2025-03-25 10:24:56] Key Pressed: Backspace (8) - Interval: 205ms 
+[2025-03-25 10:24:56] Key Pressed: R (82) - Interval: 135ms 
+[2025-03-25 10:24:56] Key Pressed: E (69) - Interval: 61ms 
+[2025-03-25 10:24:56] Key Pressed: Backspace (8) - Interval: 391ms 
+[2025-03-25 10:24:56] Key Pressed: Backspace (8) - Interval: 140ms 
+[2025-03-25 10:24:57] Key Pressed: L (76) - Interval: 341ms 
+[2025-03-25 10:24:57] Key Pressed: S (83) - Interval: 120ms 
+[2025-03-25 10:24:57] Key Pressed: Backspace (8) - Interval: 361ms 
+[2025-03-25 10:24:57] Key Pressed: Backspace (8) - Interval: 167ms 
+[2025-03-25 10:25:00] Key Pressed: O (79) - Interval: 3258ms 
+[2025-03-25 10:25:01] Key Pressed: L (76) - Interval: 201ms 
+[2025-03-25 10:25:01] Key Pressed: D (68) - Interval: 91ms 
+[2025-03-25 10:25:01] Key Pressed: Left Shift (160) - Interval: 209ms 
+[2025-03-25 10:25:01] Key Pressed: Unknown (189) - Interval: 64ms 
+[2025-03-25 10:25:01] Key Pressed: R (82) - Interval: 188ms 
+[2025-03-25 10:25:01] Key Pressed: E (69) - Interval: 70ms 
+[2025-03-25 10:25:01] Key Pressed: P (80) - Interval: 167ms 
+[2025-03-25 10:25:02] Key Pressed: O (79) - Interval: 189ms 
+[2025-03-25 10:25:02] Key Pressed: R (82) - Interval: 65ms 
+[2025-03-25 10:25:02] Key Pressed: T (84) - Interval: 160ms 
+[2025-03-25 10:25:03] Key Pressed: Backspace (8) - Interval: 663ms 
+[2025-03-25 10:25:03] Key Pressed: Backspace (8) - Interval: 180ms 
+[2025-03-25 10:25:03] Key Pressed: Backspace (8) - Interval: 161ms 
+[2025-03-25 10:25:03] Key Pressed: Backspace (8) - Interval: 180ms 
+[2025-03-25 10:25:03] Key Pressed: Backspace (8) - Interval: 159ms 
+[2025-03-25 10:25:03] Key Pressed: Backspace (8) - Interval: 146ms 
+[2025-03-25 10:25:04] Key Pressed: P (80) - Interval: 352ms 
+[2025-03-25 10:25:04] Key Pressed: Backspace (8) - Interval: 477ms 
+[2025-03-25 10:25:05] Key Pressed: Backspace (8) - Interval: 517ms 
+[2025-03-25 10:25:05] Key Pressed: Backspace (8) - Interval: 32ms 
+[2025-03-25 10:25:05] Key Pressed: Backspace (8) - Interval: 35ms 
+[2025-03-25 10:25:05] Key Pressed: Backspace (8) - Interval: 31ms 
+[2025-03-25 10:25:05] Key Pressed: Backspace (8) - Interval: 32ms 
+[2025-03-25 10:25:05] ALERT: POTENTIAL KEYSTROKE INJECTION ATTACK DETECTED!
+[2025-03-25 10:25:05] Key Pressed: Backspace (8) - Interval: 311ms 
+[2025-03-25 10:25:05] Key Pressed: Backspace (8) - Interval: 1ms 
+[2025-03-25 10:25:05] Key Pressed: Backspace (8) - Interval: 1ms 
+[2025-03-25 10:25:07] Key Pressed: Backspace (8) - Interval: 32ms 
+[2025-03-25 10:25:11] Key Pressed: C (67) - Interval: 5318ms 
+[2025-03-25 10:25:11] Key Pressed: L (76) - Interval: 125ms 
+[2025-03-25 10:25:11] Key Pressed: E (69) - Interval: 86ms 
+[2025-03-25 10:25:11] Key Pressed: A (65) - Interval: 130ms 
+[2025-03-25 10:25:11] Key Pressed: R (82) - Interval: 38ms 
+[2025-03-25 10:25:11] Key Pressed: Enter (13) - Interval: 157ms 
+[2025-03-25 10:25:12] Key Pressed: L (76) - Interval: 446ms 
+[2025-03-25 10:25:12] Key Pressed: S (83) - Interval: 104ms 
+[2025-03-25 10:25:12] Key Pressed: Enter (13) - Interval: 123ms 
+[2025-03-25 10:25:12] Key Pressed: P (80) - Interval: 737ms 
+[2025-03-25 10:25:13] Key Pressed: S (83) - Interval: 142ms 
+[2025-03-25 10:25:13] Key Pressed: Enter (13) - Interval: 238ms 
+[2025-03-25 10:25:21] Key Pressed: Left Control (162) - Interval: 8292ms 
+[2025-03-25 10:25:21] Key Pressed: C (67) - Interval: 294ms 
+[2025-03-25 10:25:24] Key Pressed: U (85) - Interval: 2102ms 
+[2025-03-25 10:25:24] Key Pressed: S (83) - Interval: 149ms 
+[2025-03-25 10:25:24] Key Pressed: B (66) - Interval: 515ms 
+[2025-03-25 10:25:25] Key Pressed: Space (32) - Interval: 983ms 
+[2025-03-25 10:25:26] Key Pressed: Backspace (8) - Interval: 430ms 
+[2025-03-25 10:25:26] Key Pressed: Backspace (8) - Interval: 156ms 
+[2025-03-25 10:25:26] Key Pressed: Backspace (8) - Interval: 145ms 
+[2025-03-25 10:25:26] Key Pressed: Backspace (8) - Interval: 144ms 
+[2025-03-25 10:25:26] Key Pressed: Backspace (8) - Interval: 151ms 
+[2025-03-25 10:25:29] Key Pressed: S (83) - Interval: 2866ms 
+[2025-03-25 10:25:29] Key Pressed: D (68) - Interval: 86ms 
+[2025-03-25 10:25:29] Key Pressed: A (65) - Interval: 89ms 
+[2025-03-25 10:25:29] Key Pressed: S (83) - Interval: 31ms 
+[2025-03-25 10:25:29] Key Pressed: D (68) - Interval: 81ms 
+[2025-03-25 10:25:29] ALERT: POTENTIAL KEYSTROKE INJECTION ATTACK DETECTED!
+[2025-03-25 10:25:30] Key Pressed: A (65) - Interval: 305ms 
+[2025-03-25 10:25:30] Key Pressed: A (65) - Interval: 53ms 
+[2025-03-25 10:28:42] Key Pressed: A (65) - Interval: 2401ms 
+[2025-03-25 10:28:42] Key Pressed: S (83) - Interval: 92ms 
+[2025-03-25 10:28:42] Key Pressed: D (68) - Interval: 92ms 
+[2025-03-25 10:28:42] Key Pressed: A (65) - Interval: 76ms 
+[2025-03-25 10:28:42] Key Pressed: D (68) - Interval: 103ms 
+[2025-03-25 10:28:42] Key Pressed: S (83) - Interval: 1ms 
+[2025-03-25 10:28:42] Key Pressed: A (65) - Interval: 74ms 
+[2025-03-25 10:28:42] Key Pressed: S (83) - Interval: 86ms 
+[2025-03-25 10:28:43] Key Pressed: D (68) - Interval: 44ms 
+[2025-03-25 10:28:43] Key Pressed: S (83) - Interval: 217ms 
+[2025-03-25 10:28:43] Key Pressed: D (68) - Interval: 113ms 
+[2025-03-25 10:28:43] Key Pressed: A (65) - Interval: 48ms 
+[2025-03-25 10:28:43] Key Pressed: S (83) - Interval: 99ms 
+[2025-03-25 10:28:43] Key Pressed: D (68) - Interval: 10ms 
+[2025-03-25 10:28:43] Key Pressed: A (65) - Interval: 75ms 
+[2025-03-25 10:28:43] Key Pressed: S (83) - Interval: 103ms 
+[2025-03-25 10:28:43] Key Pressed: D (68) - Interval: 4ms 
+[2025-03-25 10:28:43] Key Pressed: A (65) - Interval: 75ms 
+[2025-03-25 10:28:43] Key Pressed: S (83) - Interval: 89ms 
+[2025-03-25 10:28:43] Key Pressed: D (68) - Interval: 26ms 
+[2025-03-25 10:28:44] Key Pressed: Left Control (162) - Interval: 297ms 
+[2025-03-25 10:28:44] Key Pressed: C (67) - Interval: 115ms 
+[2025-03-25 10:28:44] Key Pressed: C (67) - Interval: 262ms 
+[2025-03-25 10:28:44] Key Pressed: E (69) - Interval: 279ms 
+[2025-03-25 10:28:45] Key Pressed: Backspace (8) - Interval: 406ms 
+[2025-03-25 10:28:45] Key Pressed: L (76) - Interval: 202ms 
+[2025-03-25 10:28:45] Key Pressed: E (69) - Interval: 94ms 
+[2025-03-25 10:28:45] Key Pressed: A (65) - Interval: 75ms 
+[2025-03-25 10:28:45] Key Pressed: R (82) - Interval: 80ms 
+[2025-03-25 10:28:45] Key Pressed: Enter (13) - Interval: 103ms 
+[2025-03-25 10:28:46] Key Pressed: Unknown (190) - Interval: 698ms 
+[2025-03-25 10:28:46] Key Pressed: Backspace (8) - Interval: 352ms 
+[2025-03-25 10:28:46] Key Pressed: C (67) - Interval: 131ms 
+[2025-03-25 10:28:47] Key Pressed: D (68) - Interval: 47ms 
+[2025-03-25 10:28:47] Key Pressed: Space (32) - Interval: 185ms 
+[2025-03-25 10:28:47] Key Pressed: F (70) - Interval: 4ms 
+[2025-03-25 10:28:47] Key Pressed: Tab (9) - Interval: 210ms 
+[2025-03-25 10:28:47] Key Pressed: Enter (13) - Interval: 484ms 
+[2025-03-25 10:28:49] Key Pressed: Unknown (190) - Interval: 1628ms 
+[2025-03-25 10:28:50] Key Pressed: U (85) - Interval: 683ms 
+[2025-03-25 10:28:50] Key Pressed: Tab (9) - Interval: 127ms 
+[2025-03-25 10:28:50] Key Pressed: Backspace (8) - Interval: 336ms 
+[2025-03-25 10:28:51] Key Pressed: Unknown (191) - Interval: 376ms 
+[2025-03-25 10:28:51] Key Pressed: Tab (9) - Interval: 334ms 
+[2025-03-25 10:28:51] Key Pressed: Tab (9) - Interval: 455ms 
+[2025-03-25 10:28:52] Key Pressed: Tab (9) - Interval: 351ms 
+[2025-03-25 10:28:52] Key Pressed: Tab (9) - Interval: 599ms 
+[2025-03-25 10:28:53] Key Pressed: Tab (9) - Interval: 182ms 
+[2025-03-25 10:28:53] Key Pressed: Tab (9) - Interval: 321ms 
+[2025-03-25 10:28:53] Key Pressed: Tab (9) - Interval: 337ms 
+[2025-03-25 10:28:54] Key Pressed: Tab (9) - Interval: 388ms 
+[2025-03-25 10:28:54] Key Pressed: Tab (9) - Interval: 540ms 
+[2025-03-25 10:28:55] Key Pressed: Enter (13) - Interval: 432ms 
+[2025-03-25 10:28:55] Key Pressed: Left Alt (164) - Interval: 850ms 
+[2025-03-25 10:28:55] Key Pressed: Tab (9) - Interval: 82ms 
+[2025-03-25 10:28:56] Key Pressed: A (65) - Interval: 625ms 
+[2025-03-25 10:28:56] Key Pressed: S (83) - Interval: 56ms 
+[2025-03-25 10:28:56] Key Pressed: D (68) - Interval: 59ms 
+[2025-03-25 10:28:56] Key Pressed: A (65) - Interval: 105ms 
+[2025-03-25 10:28:56] Key Pressed: S (83) - Interval: 20ms 
+[2025-03-25 10:28:56] Key Pressed: D (68) - Interval: 77ms 
+[2025-03-25 10:28:56] Key Pressed: A (65) - Interval: 81ms 
+[2025-03-25 10:28:57] Key Pressed: S (83) - Interval: 49ms 
+[2025-03-25 10:28:57] ALERT: POTENTIAL KEYSTROKE INJECTION ATTACK DETECTED!
+[2025-03-25 10:28:57] Key Pressed: A (65) - Interval: 321ms 
+[2025-03-25 10:28:57] Key Pressed: D (68) - Interval: 1ms 
+[2025-03-25 10:28:57] Key Pressed: A (65) - Interval: 2ms 
+[2025-03-25 10:28:57] Key Pressed: D (68) - Interval: 10ms 
+[2025-03-25 10:28:57] Key Pressed: S (83) - Interval: 5ms 
+[2025-03-25 10:28:59] Key Pressed: D (68) - Interval: 49ms 
+[2025-03-25 10:29:02] Key Pressed: Left Alt (164) - Interval: 5130ms 
+[2025-03-25 10:29:02] Key Pressed: Tab (9) - Interval: 76ms 
+[2025-03-25 10:29:03] Key Pressed: Left Control (162) - Interval: 761ms 
+[2025-03-25 10:29:03] Key Pressed: A (65) - Interval: 80ms 
+[2025-03-25 10:29:04] Key Pressed: C (67) - Interval: 860ms 
+[2025-03-25 10:29:04] Key Pressed: M (77) - Interval: 204ms 
+[2025-03-25 10:29:04] Key Pressed: D (68) - Interval: 100ms 
+[2025-03-25 10:29:05] Key Pressed: Space (32) - Interval: 806ms 
+[2025-03-25 10:29:06] Key Pressed: P (80) - Interval: 574ms 
+[2025-03-25 10:29:06] Key Pressed: W (87) - Interval: 198ms 
+[2025-03-25 10:29:06] Key Pressed: O (79) - Interval: 25ms 
+[2025-03-25 10:29:06] Key Pressed: Backspace (8) - Interval: 300ms 
+[2025-03-25 10:29:06] Key Pressed: Backspace (8) - Interval: 131ms 
+[2025-03-25 10:29:06] Key Pressed: O (79) - Interval: 135ms 
+[2025-03-25 10:29:06] Key Pressed: W (87) - Interval: 87ms 
+[2025-03-25 10:29:07] Key Pressed: E (69) - Interval: 160ms 
+[2025-03-25 10:29:07] Key Pressed: R (82) - Interval: 113ms 
+[2025-03-25 10:29:07] Key Pressed: S (83) - Interval: 481ms 
+[2025-03-25 10:29:07] Key Pressed: H (72) - Interval: 211ms 
+[2025-03-25 10:29:07] Key Pressed: E (69) - Interval: 103ms 
+[2025-03-25 10:29:08] Key Pressed: L (76) - Interval: 175ms 
+[2025-03-25 10:29:08] Key Pressed: L (76) - Interval: 116ms 
+[2025-03-25 10:29:08] Key Pressed: Space (32) - Interval: 85ms 
+[2025-03-25 10:29:12] Key Pressed: Left Control (162) - Interval: 4105ms 
+[2025-03-25 10:29:12] Key Pressed: A (65) - Interval: 128ms 
+[2025-03-25 10:29:12] Key Pressed: Backspace (8) - Interval: 211ms 
+[2025-03-25 10:29:13] Key Pressed: Left Alt (164) - Interval: 562ms 
+[2025-03-25 10:29:13] Key Pressed: Tab (9) - Interval: 70ms 
+[2025-03-25 10:29:18] Key Pressed: Left Alt (164) - Interval: 5103ms 
+[2025-03-25 10:29:18] Key Pressed: Tab (9) - Interval: 147ms 
+[2025-03-25 10:29:19] Key Pressed: Left Alt (164) - Interval: 470ms 
+[2025-03-25 10:29:19] Key Pressed: Tab (9) - Interval: 38ms 
+[2025-03-25 10:29:20] Key Pressed: Z (90) - Interval: 1435ms 
+[2025-03-25 10:29:20] Key Pressed: A (65) - Interval: 98ms 
+[2025-03-25 10:29:21] Key Pressed: Enter (13) - Interval: 641ms 
+[2025-03-25 10:29:50] Key Pressed: G (71) - Interval: 28693ms 
+[2025-03-25 10:29:50] Key Pressed: M (77) - Interval: 86ms 
+[2025-03-25 10:29:50] Key Pressed: A (65) - Interval: 132ms 
+[2025-03-25 10:29:50] Key Pressed: I (73) - Interval: 140ms 
+[2025-03-25 10:29:50] Key Pressed: L (76) - Interval: 491ms 
+[2025-03-25 10:29:51] Key Pressed: Down Arrow (40) - Interval: 386ms 
+[2025-03-25 10:29:51] Key Pressed: Down Arrow (40) - Interval: 156ms 
+[2025-03-25 10:29:51] Key Pressed: Down Arrow (40) - Interval: 156ms 
+[2025-03-25 10:29:51] Key Pressed: Up Arrow (38) - Interval: 233ms 
+[2025-03-25 10:29:51] Key Pressed: Up Arrow (38) - Interval: 163ms 
+[2025-03-25 10:29:52] Key Pressed: Enter (13) - Interval: 202ms 
+[2025-03-25 10:30:04] Key Pressed: Left Alt (164) - Interval: 12131ms 
+[2025-03-25 10:30:04] Key Pressed: Tab (9) - Interval: 42ms 
+[2025-03-25 10:30:09] Key Pressed: Left Alt (164) - Interval: 5395ms 
+[2025-03-25 10:30:10] Key Pressed: Left Alt (164) - Interval: 515ms 
+[2025-03-25 10:30:10] Key Pressed: Left Alt (164) - Interval: 32ms 
+[2025-03-25 10:30:10] Key Pressed: Left Alt (164) - Interval: 32ms 
+[2025-03-25 10:30:10] Key Pressed: Left Alt (164) - Interval: 32ms 
+[2025-03-25 10:30:10] Key Pressed: Left Alt (164) - Interval: 32ms 
+[2025-03-25 10:30:10] ALERT: POTENTIAL KEYSTROKE INJECTION ATTACK DETECTED!
+[2025-03-25 10:30:10] Key Pressed: Left Alt (164) - Interval: 309ms 
+[2025-03-25 10:30:10] Key Pressed: Left Alt (164) - Interval: 1ms 
+[2025-03-25 10:30:10] Key Pressed: Left Alt (164) - Interval: 2ms 
+[2025-03-25 10:30:10] Key Pressed: Left Alt (164) - Interval: 1ms 
+[2025-03-25 10:30:10] Key Pressed: Left Alt (164) - Interval: 1ms 
+[2025-03-25 10:30:10] ALERT: POTENTIAL KEYSTROKE INJECTION ATTACK DETECTED!
+[2025-03-25 10:30:11] Key Pressed: Left Alt (164) - Interval: 307ms 
+[2025-03-25 10:30:11] Key Pressed: Left Alt (164) - Interval: 2ms 
+[2025-03-25 10:30:11] Key Pressed: Left Alt (164) - Interval: 0ms 
+[2025-03-25 10:30:11] Key Pressed: Left Alt (164) - Interval: 2ms 
+[2025-03-25 10:30:11] Key Pressed: Left Alt (164) - Interval: 1ms 
+[2025-03-25 10:30:11] ALERT: POTENTIAL KEYSTROKE INJECTION ATTACK DETECTED!
+[2025-03-25 10:30:11] Key Pressed: Left Alt (164) - Interval: 1ms 
+[2025-03-25 10:30:12] Key Pressed: Left Alt (164) - Interval: 0ms 
+[2025-03-25 10:30:13] Key Pressed: Left Alt (164) - Interval: 34ms 
+[2025-03-25 10:30:13] Key Pressed: Left Alt (164) - Interval: 2200ms 
+[2025-03-25 10:30:13] Key Pressed: Tab (9) - Interval: 81ms 
+[2025-03-25 10:30:17] Key Pressed: Left Alt (164) - Interval: 3809ms 
+[2025-03-25 10:30:17] Key Pressed: Tab (9) - Interval: 96ms 
+[2025-03-25 10:30:21] Key Pressed: Left Alt (164) - Interval: 3901ms 
+[2025-03-25 10:30:21] Key Pressed: Left Alt (164) - Interval: 671ms 
+[2025-03-25 10:30:22] Key Pressed: Left Alt (164) - Interval: 516ms 
+[2025-03-25 10:30:22] Key Pressed: Left Alt (164) - Interval: 34ms 
+[2025-03-25 10:30:22] Key Pressed: Left Alt (164) - Interval: 33ms 
+[2025-03-25 10:30:22] Key Pressed: Left Alt (164) - Interval: 32ms 
+[2025-03-25 10:30:22] Key Pressed: Left Alt (164) - Interval: 34ms 
+[2025-03-25 10:30:22] ALERT: POTENTIAL KEYSTROKE INJECTION ATTACK DETECTED!
+[2025-03-25 10:30:22] Key Pressed: Left Alt (164) - Interval: 303ms 
+[2025-03-25 10:30:22] Key Pressed: Left Alt (164) - Interval: 2ms 
+[2025-03-25 10:30:22] Key Pressed: Left Alt (164) - Interval: 0ms 
+[2025-03-25 10:30:22] Key Pressed: Left Alt (164) - Interval: 1ms 
+[2025-03-25 10:30:22] Key Pressed: Left Alt (164) - Interval: 0ms 
+[2025-03-25 10:30:22] ALERT: POTENTIAL KEYSTROKE INJECTION ATTACK DETECTED!
+[2025-03-25 10:30:23] Key Pressed: Left Alt (164) - Interval: 1ms 
+[2025-03-25 10:30:23] Key Pressed: Left Alt (164) - Interval: 33ms 
+[2025-03-25 10:30:25] Key Pressed: Left Control (162) - Interval: 2417ms 
+[2025-03-25 10:30:25] Key Pressed: C (67) - Interval: 103ms 
+[2025-03-25 10:30:25] Key Pressed: C (67) - Interval: 466ms 
+[2025-03-25 10:30:26] Key Pressed: L (76) - Interval: 279ms 
+[2025-03-25 10:30:26] Key Pressed: E (69) - Interval: 97ms 
+[2025-03-25 10:30:26] Key Pressed: A (65) - Interval: 109ms 
+[2025-03-25 10:30:26] Key Pressed: R (82) - Interval: 76ms 
+[2025-03-25 10:30:26] Key Pressed: Enter (13) - Interval: 133ms 
+[2025-03-25 10:30:28] Key Pressed: L (76) - Interval: 1764ms 
+[2025-03-25 10:30:28] Key Pressed: S (83) - Interval: 59ms 
+[2025-03-25 10:30:28] Key Pressed: Enter (13) - Interval: 197ms 
+[2025-03-25 10:30:29] Key Pressed: Left Alt (164) - Interval: 874ms 
+[2025-03-25 10:30:29] Key Pressed: Left Alt (164) - Interval: 518ms 
+[2025-03-25 10:30:29] Key Pressed: Left Alt (164) - Interval: 33ms 
+[2025-03-25 10:30:30] Key Pressed: Left Alt (164) - Interval: 33ms 
+[2025-03-25 10:30:30] Key Pressed: Left Alt (164) - Interval: 32ms 
+[2025-03-25 10:30:30] Key Pressed: Left Alt (164) - Interval: 35ms 
+[2025-03-25 10:30:30] ALERT: POTENTIAL KEYSTROKE INJECTION ATTACK DETECTED!
+[2025-03-25 10:30:30] Key Pressed: Left Alt (164) - Interval: 305ms 
+[2025-03-25 10:30:30] Key Pressed: Left Alt (164) - Interval: 0ms 
+[2025-03-25 10:30:30] Key Pressed: Left Alt (164) - Interval: 1ms 
+[2025-03-25 10:30:30] Key Pressed: Left Alt (164) - Interval: 1ms 
+[2025-03-25 10:30:30] Key Pressed: Left Alt (164) - Interval: 1ms 
+[2025-03-25 10:30:30] ALERT: POTENTIAL KEYSTROKE INJECTION ATTACK DETECTED!
+[2025-03-25 10:30:30] Key Pressed: Left Alt (164) - Interval: 304ms 
+[2025-03-25 10:30:30] Key Pressed: Left Alt (164) - Interval: 2ms 
+[2025-03-25 10:30:30] Key Pressed: Left Alt (164) - Interval: 0ms 
+[2025-03-25 10:30:30] Key Pressed: Left Alt (164) - Interval: 1ms 
+[2025-03-25 10:30:30] Key Pressed: Left Alt (164) - Interval: 1ms 
+[2025-03-25 10:30:30] ALERT: POTENTIAL KEYSTROKE INJECTION ATTACK DETECTED!
+[2025-03-25 10:30:33] Key Pressed: Left Alt (164) - Interval: 0ms 
+[2025-03-25 10:30:33] Key Pressed: Left Alt (164) - Interval: 1ms 
+[2025-03-25 10:30:34] Key Pressed: Left Alt (164) - Interval: 33ms 
+[2025-03-25 10:30:40] Key Pressed: Left Alt (164) - Interval: 9323ms 
+[2025-03-25 10:30:40] Key Pressed: Tab (9) - Interval: 86ms 
+[2025-03-25 10:30:40] Key Pressed: Left Alt (164) - Interval: 389ms 
+[2025-03-25 10:30:40] Key Pressed: Left Alt (164) - Interval: 278ms 
+[2025-03-25 10:30:41] Key Pressed: Left Alt (164) - Interval: 520ms 
+[2025-03-25 10:30:41] Key Pressed: Left Alt (164) - Interval: 31ms 
+[2025-03-25 10:30:41] Key Pressed: Left Alt (164) - Interval: 33ms 
+[2025-03-25 10:30:41] Key Pressed: Left Alt (164) - Interval: 32ms 
+[2025-03-25 10:30:41] Key Pressed: Left Alt (164) - Interval: 33ms 
+[2025-03-25 10:30:41] ALERT: POTENTIAL KEYSTROKE INJECTION ATTACK DETECTED!
+[2025-03-25 10:30:41] Key Pressed: Left Alt (164) - Interval: 312ms 
+[2025-03-25 10:30:41] Key Pressed: Left Alt (164) - Interval: 2ms 
+[2025-03-25 10:30:41] Key Pressed: Left Alt (164) - Interval: 0ms 
+[2025-03-25 10:30:41] Key Pressed: Left Alt (164) - Interval: 0ms 
+[2025-03-25 10:30:41] Key Pressed: Left Alt (164) - Interval: 1ms 
+[2025-03-25 10:30:41] ALERT: POTENTIAL KEYSTROKE INJECTION ATTACK DETECTED!
+[2025-03-25 10:30:42] Key Pressed: Left Alt (164) - Interval: 307ms 
+[2025-03-25 10:30:42] Key Pressed: Left Alt (164) - Interval: 0ms 
+[2025-03-25 10:30:42] Key Pressed: Left Alt (164) - Interval: 2ms 
+[2025-03-25 10:30:42] Key Pressed: Left Alt (164) - Interval: 0ms 
+[2025-03-25 10:30:42] Key Pressed: Left Alt (164) - Interval: 0ms 
+[2025-03-25 10:30:42] Key Pressed: Left Alt (164) - Interval: 33ms 
