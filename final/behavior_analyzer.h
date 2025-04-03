@@ -29,10 +29,16 @@ private:
 
     // Check if the currentInput contains a blacklisted word
     bool ContainsBlacklistedWord();
+    
+    // Hook handle
+    HHOOK keyboardHook;
 
 public:
     BehaviorAnalyzer();
     ~BehaviorAnalyzer();
+    
+    // Singleton pattern
+    static BehaviorAnalyzer& GetInstance();
 
     // Installs the low-level hook to watch for suspicious behavior
     void Start();

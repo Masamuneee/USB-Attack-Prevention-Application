@@ -84,17 +84,18 @@ LRESULT CALLBACK KeyLogger::KeyStrokeLogger(int nCode, WPARAM wParam, LPARAM lPa
         auto* kbdStruct = reinterpret_cast<KBDLLHOOKSTRUCT*>(lParam);
         DWORD vkCode = kbdStruct->vkCode;
 
-        // We'll do static-based timing for demonstration
+        // Access the singleton instance instead of creating temporary instances
+        static KeyLogger& logger = KeyLogger::GetInstance();
+        
+        // We'll use static-based timing for demonstration
         static auto s_lastTime = std::chrono::steady_clock::now();
         auto now = std::chrono::steady_clock::now();
         int interval = (int)std::chrono::duration_cast<std::chrono::milliseconds>(now - s_lastTime).count();
         s_lastTime = now;
-
-        // Write out to file or handle in class
-        // For demonstration, create an instance each time (not typically recommended).
-        KeyLogger tempLogger;
-        tempLogger.LogKeyStroke(vkCode, interval);
-        tempLogger.CheckForSuspiciousActivity(interval);
+        
+        // Use the persistent instance
+        logger.LogKeyStroke(vkCode, interval);
+        logger.CheckForSuspiciousActivity(interval);
     }
 
     return CallNextHookEx(nullptr, nCode, wParam, lParam);
@@ -177,4 +178,11 @@ void KeyLogger::CheckForSuspiciousActivity(int interval)
         }
         // Additional actions can be performed here
     }
+}
+
+// Singleton implementation
+KeyLogger& KeyLogger::GetInstance()
+{
+    static KeyLogger instance;
+    return instance;
 }

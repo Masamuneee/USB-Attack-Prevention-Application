@@ -1,34 +1,31 @@
 #include "key_logger.h"
 #include "device_authenticator.h"
 #include "behavior_analyzer.h"
+#include "system_tray.h"
 #include <windows.h>
 
 int main()
 {
-    KeyLogger logger;
-    DeviceAuthenticator authenticator;
-    BehaviorAnalyzer analyzer;
+    // Get references to singletons
+    KeyLogger& logger = KeyLogger::GetInstance();
+    DeviceAuthenticator& authenticator = DeviceAuthenticator::GetInstance();
+    BehaviorAnalyzer& analyzer = BehaviorAnalyzer::GetInstance();
+    SystemTray& tray = SystemTray::GetInstance();
 
-    // Possibly add blacklisted words
+    // Add blacklisted words
     analyzer.AddBlacklistedWord("cmd");
     analyzer.AddBlacklistedWord("powershell");
 
+    // Start services
     logger.Start();
     authenticator.Start();
     analyzer.Start();
-
-    // Keep the app running with a message loop so the hooks remain active
-    MSG msg;
-    while (GetMessage(&msg, nullptr, 0, 0))
-    {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+    
+    // Initialize and run the system tray
+    if (tray.Initialize()) {
+        tray.RunMessageLoop();
     }
 
-    // Cleanup
-    logger.Stop();
-    authenticator.Stop();
-    analyzer.Stop();
-
+    // Cleanup happens automatically in destructors
     return 0;
 }

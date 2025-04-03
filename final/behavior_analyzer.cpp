@@ -26,8 +26,8 @@ LRESULT CALLBACK BehaviorAnalyzer::BehaviorMonitor(int nCode, WPARAM wParam, LPA
         int interval = (int)std::chrono::duration_cast<std::chrono::milliseconds>(now - g_lastPress).count();
         g_lastPress = now;
 
-        // For demonstration, create an instance each time.
-        BehaviorAnalyzer analyzer;
+        // Use the singleton instance
+        BehaviorAnalyzer& analyzer = BehaviorAnalyzer::GetInstance();
         analyzer.AnalyzeKeystrokes(vkCode);
 
         if (analyzer.IsSuspiciousPattern(interval)) {
@@ -38,7 +38,15 @@ LRESULT CALLBACK BehaviorAnalyzer::BehaviorMonitor(int nCode, WPARAM wParam, LPA
     return CallNextHookEx(nullptr, nCode, wParam, lParam);
 }
 
+// Singleton implementation
+BehaviorAnalyzer& BehaviorAnalyzer::GetInstance()
+{
+    static BehaviorAnalyzer instance;
+    return instance;
+}
+
 BehaviorAnalyzer::BehaviorAnalyzer()
+    : keyboardHook(nullptr)
 {
 }
 
@@ -50,12 +58,15 @@ BehaviorAnalyzer::~BehaviorAnalyzer()
 void BehaviorAnalyzer::Start()
 {
     // Install the low-level keyboard hook
-    SetWindowsHookEx(WH_KEYBOARD_LL, BehaviorMonitor, GetModuleHandle(nullptr), 0);
+    keyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, BehaviorMonitor, GetModuleHandle(nullptr), 0);
 }
 
 void BehaviorAnalyzer::Stop()
 {
-    // If we stored the hook handle, we would unhook here.
+    if (keyboardHook) {
+        UnhookWindowsHookEx(keyboardHook);
+        keyboardHook = nullptr;
+    }
 }
 
 void BehaviorAnalyzer::AddBlacklistedWord(const std::string& word)
