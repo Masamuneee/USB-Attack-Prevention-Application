@@ -1,36 +1,67 @@
  # USB Attack Prevention Application
 
-**Version:** 1.0.1 
+**Version:** 1.0.2
 **Author:** Masamune (Minh Pham) / Lio (Thai Do)
 
 ## Description
-A C++ application to detect and prevent potential USB-based keystroke injection attacks. It:
-1. Monitors keystrokes from the keyboard in real-time.
-2. Detects newly connected keyboard devices and requires manual user verification.
-3. Identifies and blocks anomalous keystroke patterns (e.g., too-fast intervals).
+A comprehensive security solution for protecting against malicious USB devices through multi-layered defense mechanisms.
+
+## Features
+
+- **Key Logging and Monitoring**: Records all keyboard activity with detailed timing and pattern analysis
+- **Device Authentication**: Forces new USB devices to verify through a challenge-response mechanism
+- **Behavior Analysis**: Detects suspicious keystroke patterns and blocks potentially harmful commands
+- **System Tray Integration**: Easy access to device management and application controls
 
 ## Prerequisites
+
 - Microsoft Windows (tested on Windows 10/11).
 - Microsoft Visual Studio or any other compiler that supports Windows API.
-- Administrator privileges (required for low-level hooks).
+- MinGW/GCC compiler for building from source.
 
-## Installation
-1. Clone or download this repository.
-2. Open the `.sln` file in Visual Studio (or create a new project and add the source files).
-3. Build the solution in **Release** mode (recommended).
+## Building the Project
+
+Use the included Makefile to build the project:
+
+```
+make
+```
+
+Or compile manually with:
+
+```
+g++ key_logger.cpp device_authenticator.cpp behavior_analyzer.cpp system_tray.cpp main.cpp -o usb_hooks.exe -mwindows -std=c++17 -lsetupapi
+```
 
 ## Usage
-1. **Run the compiled `.exe`**
-```cmd
-cd final
-g++ key_logger.cpp device_authenticator.cpp behavior_analyzer.cpp main.cpp -o usb_hooks.exe -mwindows -std=c++17
-```
-2. The application automatically installs three hooks:
-   - **Keystroke Logging Hook**: Logs every key pressed (including the originating device).
-   - **Device Connection Hook**: Prompts the user to authenticate when a new keyboard is connected.
-   - **Anomaly Detection Hook**: Monitors keystroke speed/intervals to detect suspicious patterns.
-3. **Check the console window** (if you built a console application) or logs to see real-time events.
-4. **Review `keys.log`** for all captured keystrokes (timestamp, device info, etc.).
+
+1. Run `usb_hooks.exe` to start the application
+2. The application will appear in the system tray
+3. Right-click on the tray icon to access options:
+   - **Show USB Devices:** View and manage connected USB devices
+   - **Enable/Disable Logging:** Toggle keystroke logging
+   - **Exit:** Close the application
+
+## Security Layers
+
+### Layer 1: Device Authentication
+When a new USB keyboard device is connected, the application will:
+- Prompt for authentication using a random 4-character code
+- Block devices after 5 failed authentication attempts
+- Remember trusted devices for future sessions
+
+### Layer 2: Behavior Analysis
+Even after authentication, the application monitors for:
+- Unusually fast typing speeds (potential automation)
+- Blacklisted commands or patterns
+- Suspicious key sequence patterns
+
+### Layer 3: Activity Logging
+All keyboard events are logged with:
+- Timestamps
+- Key sequences
+- Timing intervals
+- Alerts for suspicious activity
 
 ## Contributing
 - Fork this repository.
