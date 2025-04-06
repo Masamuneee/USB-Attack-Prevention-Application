@@ -7,6 +7,16 @@ project(USBMonitor VERSION 1.0.3 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Define as Windows GUI application
+if(MSVC)
+    # For Visual Studio
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS")
+else()
+    # For MinGW/GCC
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -mwindows")
+endif()
+
 # Include directories
 include_directories(${CMAKE_SOURCE_DIR}/final)
 
@@ -32,10 +42,11 @@ set(HEADERS
 add_executable(usb_hooks WIN32 ${SOURCES} ${HEADERS})
 
 # Add Windows libraries
-target_link_libraries(usb_hooks setupapi comctl32)
-
-# Set Windows subsystem
-set_target_properties(usb_hooks PROPERTIES WIN32_EXECUTABLE TRUE)
+if(MSVC)
+    target_link_libraries(usb_hooks setupapi comctl32)
+else()
+    target_link_libraries(usb_hooks setupapi comctl32)
+endif()
 
 # Installation configuration
 install(TARGETS usb_hooks DESTINATION bin)

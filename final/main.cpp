@@ -4,13 +4,13 @@
 #include "system_tray.h"
 #include <windows.h>
 
-int main()
+// Previous main function converted to init function
+void InitializeApplication()
 {
     // Get references to singletons
     KeyLogger& logger = KeyLogger::GetInstance();
     DeviceAuthenticator& authenticator = DeviceAuthenticator::GetInstance();
     BehaviorAnalyzer& analyzer = BehaviorAnalyzer::GetInstance();
-    SystemTray& tray = SystemTray::GetInstance();
 
     // Add blacklisted words
     analyzer.AddBlacklistedWord("cmd");
@@ -20,8 +20,16 @@ int main()
     logger.Start();
     authenticator.Start();
     analyzer.Start();
+}
+
+// Windows GUI application entry point
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+{
+    // Initialize everything
+    InitializeApplication();
     
     // Initialize and run the system tray
+    SystemTray& tray = SystemTray::GetInstance();
     if (tray.Initialize()) {
         tray.RunMessageLoop();
     }
