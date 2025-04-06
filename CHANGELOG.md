@@ -2,6 +2,27 @@
 
 All notable changes to the USB Device Security Suite will be documented in this file.
 
+## [1.0.3] - 2025-04-06
+
+### Added
+- Device untrusting functionality to revoke trust from previously authorized devices
+- Settings dialog with application configuration options
+- Blacklist word management through the UI
+- Custom system tray icon for better visibility
+- "About" dialog with application information
+- Option to launch application at Windows startup
+
+### Fixed
+- Improved authentication dialog with better visual feedback
+- Enhanced ListView control for device management
+- Fixed memory leaks in device event handling
+
+### Changed
+- Modernized UI with improved styling and layout
+- Added confirmation dialogs for critical operations
+- Enhanced device details display
+- Better error handling and user feedback
+
 ## [1.0.2] - 2025-03-04
 
 ### Added

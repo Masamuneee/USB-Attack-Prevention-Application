@@ -5,7 +5,7 @@
 #include <string>
 #include "resource.h" // For menu IDs
 
-// Menu command IDs are now in resource.h
+// Menu and control IDs are now in resource.h
 
 class SystemTray
 {
@@ -19,7 +19,16 @@ private:
     void CreateTrayIcon();
     void DeleteTrayIcon();
     void ShowContextMenu();
+    
+    // UI functions
     void ShowDeviceList();
+    void ShowSettingsDialog();
+    void ShowAboutDialog();
+    
+    // Helper methods
+    std::string GetExecutableDirectory();
+    bool IsStartupEnabled();
+    void SetStartupEnabled(bool enable);
 
 public:
     SystemTray();

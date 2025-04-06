@@ -1,10 +1,10 @@
- # USB Attack Prevention Application
+# USB Attack Prevention Application
 
-**Version:** 1.0.2
+**Version:** 1.0.3
 **Author:** Masamune (Minh Pham) / Lio (Thai Do)
 
 ## Description
-A comprehensive security solution for protecting against malicious USB devices through multi-layered defense mechanisms.
+A comprehensive security solution for protecting against malicious USB devices through multi-layered defense mechanisms. This application helps safeguard your system by monitoring and controlling USB keyboard devices, filtering suspicious input, and preventing automated attacks.
 
 ## Features
 
@@ -12,34 +12,57 @@ A comprehensive security solution for protecting against malicious USB devices t
 - **Device Authentication**: Forces new USB devices to verify through a challenge-response mechanism
 - **Behavior Analysis**: Detects suspicious keystroke patterns and blocks potentially harmful commands
 - **System Tray Integration**: Easy access to device management and application controls
+- **Device Trust Management**: Ability to trust and untrust devices through an intuitive UI
+- **Settings Configuration**: Customize application behavior and security preferences
+- **Startup Integration**: Option to launch automatically when Windows starts
 
 ## Prerequisites
 
-- Microsoft Windows (tested on Windows 10/11).
-- Microsoft Visual Studio or any other compiler that supports Windows API.
-- MinGW/GCC compiler for building from source.
+- Microsoft Windows (tested on Windows 10/11)
+- Microsoft Visual Studio 2019+ or MinGW/GCC compiler
+- Windows API and common controls libraries
 
 ## Building the Project
 
-Use the included Makefile to build the project:
+### Using the Makefile
+The easiest way to build the project is using the included Makefile:
 
 ```
 make
 ```
 
-Or compile manually with:
+### Using the compile.bat script
+For Windows users without make installed, use the compile.bat script:
 
 ```
-g++ key_logger.cpp device_authenticator.cpp behavior_analyzer.cpp system_tray.cpp main.cpp -o usb_hooks.exe -mwindows -std=c++17 -lsetupapi
+compile.bat
 ```
+
+### Manual compilation
+You can also compile manually with:
+
+```
+g++ final/key_logger.cpp final/device_authenticator.cpp final/behavior_analyzer.cpp final/system_tray.cpp final/main.cpp -o usb_hooks.exe -mwindows -std=c++17 -lsetupapi -lcomctl32
+```
+
+## Project Structure
+
+- **key_logger.cpp/.h**: Monitors and logs all keyboard activities
+- **device_authenticator.cpp/.h**: Handles USB device detection and authentication
+- **behavior_analyzer.cpp/.h**: Analyzes keystroke patterns and filters suspicious input
+- **system_tray.cpp/.h**: Provides user interface through system tray integration
+- **resource.h**: Contains ID definitions for UI elements
+- **main.cpp**: Application entry point and initialization
 
 ## Usage
 
 1. Run `usb_hooks.exe` to start the application
-2. The application will appear in the system tray
+2. The application will appear in the system tray (near the clock)
 3. Right-click on the tray icon to access options:
-   - **Show USB Devices:** View and manage connected USB devices
+   - **Manage USB Devices:** View, trust, or untrust connected USB devices
+   - **Settings:** Configure application behavior and security preferences
    - **Enable/Disable Logging:** Toggle keystroke logging
+   - **About:** View application information
    - **Exit:** Close the application
 
 ## Security Layers
@@ -47,14 +70,16 @@ g++ key_logger.cpp device_authenticator.cpp behavior_analyzer.cpp system_tray.cp
 ### Layer 1: Device Authentication
 When a new USB keyboard device is connected, the application will:
 - Prompt for authentication using a random 4-character code
-- Block devices after 5 failed authentication attempts
+- Block devices after 5 failed authentication attempts (for 1 hour)
 - Remember trusted devices for future sessions
+- Allow manual trusting/untrusting of devices through the UI
 
 ### Layer 2: Behavior Analysis
 Even after authentication, the application monitors for:
 - Unusually fast typing speeds (potential automation)
-- Blacklisted commands or patterns
+- Blacklisted commands or patterns (customizable through Settings)
 - Suspicious key sequence patterns
+- Optional automatic blocking of suspicious input
 
 ### Layer 3: Activity Logging
 All keyboard events are logged with:
@@ -64,10 +89,27 @@ All keyboard events are logged with:
 - Alerts for suspicious activity
 
 ## Contributing
-- Fork this repository.
-- Create a new branch for your feature.
-- Submit a pull request with a clear description.
+
+### Development Workflow
+1. Fork this repository
+2. Create a feature branch: `git checkout -b feature/your-feature-name`
+3. Commit your changes: `git commit -m 'Add some feature'`
+4. Push to your fork: `git push origin feature/your-feature-name`
+5. Create a pull request
+
+## Troubleshooting
+
+### Common Issues
+- **Compilation errors**: Make sure all required libraries are installed
+- **"Permission denied"**: Ensure the application isn't running when recompiling
+- **Device not detected**: Verify you have administrative privileges
+- **UI not displaying**: Check that comctl32.lib is properly linked
 
 ## License
 This project is licensed under the [MIT License](LICENSE) - see the LICENSE file for details.
+
+## Acknowledgments
+- Windows API documentation
+- SetupAPI and Device Management API
+- Common Controls library
 

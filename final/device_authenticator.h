@@ -10,6 +10,23 @@
 #include <vector>
 #include <set>
 
+// Event types for device authentication
+enum class AuthEvent {
+    DEVICE_DETECTED,
+    DEVICE_AUTHENTICATED,
+    DEVICE_AUTH_FAILED,
+    DEVICE_BLOCKED,
+    DEVICE_UNTRUSTED,
+    DEVICE_REMOVED
+};
+
+// Interface for objects that want to receive auth events
+class IDeviceAuthListener {
+public:
+    virtual ~IDeviceAuthListener() = default;
+    virtual void OnAuthEvent(AuthEvent event, const std::string& deviceId) = 0;
+};
+
 struct USBDeviceInfo {
     std::string deviceId;
     std::string friendlyName;
@@ -44,6 +61,9 @@ private:
     
     // List of all known USB devices
     std::unordered_map<std::string, USBDeviceInfo> knownDevices;
+    
+    // List of event listeners
+    std::vector<IDeviceAuthListener*> listeners;
 
     // Attempts to authenticate a newly detected device
     bool AuthenticateDevice(const std::string& deviceId);
@@ -59,6 +79,9 @@ private:
     
     // Enumerate existing devices
     void EnumerateExistingDevices();
+    
+    // Notify registered listeners of events
+    void NotifyListeners(AuthEvent event, const std::string& deviceId);
 
 public:
     DeviceAuthenticator();
@@ -78,6 +101,13 @@ public:
     
     // Set device trust status manually
     bool SetDeviceTrust(const std::string& deviceId, bool trusted);
+    
+    // Untrust a previously trusted device (new function)
+    bool UntrustDevice(const std::string& deviceId);
+    
+    // Register/unregister for auth events
+    void RegisterListener(IDeviceAuthListener* listener);
+    void UnregisterListener(IDeviceAuthListener* listener);
 };
 
 #endif // DEVICE_AUTHENTICATOR_H

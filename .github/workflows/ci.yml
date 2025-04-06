@@ -1,0 +1,70 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up MSVC
+      uses: microsoft/setup-msbuild@v1.0.2
+
+    - name: Create Build Directory
+      run: mkdir build
+
+    - name: Configure with CMake
+      run: |
+        cd build
+        cmake ..
+
+    - name: Build
+      run: |
+        cd build
+        cmake --build . --config Release
+
+    - name: Run Tests
+      run: |
+        cd build
+        ctest -C Release
+
+    - name: Package Release
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      run: |
+        cd build
+        cpack -C Release
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: usb-monitor-windows
+        path: build/Release/usb_hooks.exe
+
+    - name: Create Release
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ github.run_number }}
+        release_name: Release v${{ github.run_number }}
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./build/Release/usb_hooks.exe
+        asset_name: usb_hooks.exe
+        asset_content_type: application/octet-stream

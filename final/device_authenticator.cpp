@@ -146,20 +146,99 @@ LRESULT CALLBACK AuthDialogProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
     return FALSE;
 }
 
-// Enhanced prompt for authentication
-static bool PromptUserForAuthentication(HWND parent, const std::string& code)
+// Enhanced prompt for authentication with proper dialog
+static bool PromptUserForAuthentication(HWND parent, const std::string& deviceName, const std::string& code)
 {
-    // Instead of using DialogBoxParam with a resource, we'll create a dialog dynamically
-    // or use MessageBox as a fallback
+    // Create the dialog resources dynamically
+    HWND hDlg = CreateWindowEx(
+        WS_EX_DLGMODALFRAME | WS_EX_TOPMOST,
+        "STATIC",
+        "USB Device Authentication",
+        WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
+        CW_USEDEFAULT, CW_USEDEFAULT, 350, 200,
+        parent, nullptr, GetModuleHandle(nullptr), nullptr
+    );
     
-    std::ostringstream oss;
-    oss << "A new keyboard device has been detected.\n"
-        << "Please type the following code on that keyboard to verify: "
-        << code << "\n"
-        << "Press OK if correct, or Cancel if incorrect.";
-
-    int result = MessageBoxA(parent, oss.str().c_str(), "Device Authentication", MB_OKCANCEL | MB_ICONINFORMATION);
-    return (result == IDOK);
+    if (!hDlg) {
+        return false;
+    }
+    
+    // Center the dialog on the parent window or screen
+    RECT rc, rcDlg, rcOwner;
+    if (parent) {
+        GetWindowRect(parent, &rcOwner);
+    } else {
+        rcOwner.left = rcOwner.top = 0;
+        rcOwner.right = GetSystemMetrics(SM_CXSCREEN);
+        rcOwner.bottom = GetSystemMetrics(SM_CYSCREEN);
+    }
+    
+    GetWindowRect(hDlg, &rcDlg);
+    rc.left = rcOwner.left + ((rcOwner.right - rcOwner.left) - (rcDlg.right - rcDlg.left)) / 2;
+    rc.top = rcOwner.top + ((rcOwner.bottom - rcOwner.top) - (rcDlg.bottom - rcDlg.top)) / 2;
+    SetWindowPos(hDlg, nullptr, rc.left, rc.top, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+    
+    // Create the device information text
+    std::string infoText = "A new keyboard device has been detected:\n" + deviceName + 
+                          "\n\nPlease type the following code on that keyboard to verify:";
+    CreateWindowEx(0, "STATIC", infoText.c_str(),
+                  WS_CHILD | WS_VISIBLE | SS_LEFT,
+                  20, 20, 310, 60, hDlg, nullptr, GetModuleHandle(nullptr), nullptr);
+    
+    // Create the challenge code display (larger font for better visibility)
+    HWND hCodeText = CreateWindowEx(0, "STATIC", code.c_str(),
+                                   WS_CHILD | WS_VISIBLE | SS_CENTER,
+                                   20, 90, 310, 30, hDlg, nullptr, GetModuleHandle(nullptr), nullptr);
+                                   
+    // Set larger font for the code
+    HFONT hFont = CreateFont(24, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, 
+                            DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 
+                            DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+    SendMessage(hCodeText, WM_SETFONT, (WPARAM)hFont, TRUE);
+    
+    // Create the verify and cancel buttons
+    HWND hBtnVerify = CreateWindowEx(0, "BUTTON", "Verify",
+                                    WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                    180, 140, 70, 25, hDlg, (HMENU)IDOK, GetModuleHandle(nullptr), nullptr);
+                                    
+    HWND hBtnCancel = CreateWindowEx(0, "BUTTON", "Cancel",
+                                    WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                    260, 140, 70, 25, hDlg, (HMENU)IDCANCEL, GetModuleHandle(nullptr), nullptr);
+    
+    // Set the focus to the verify button
+    SetFocus(hBtnVerify);
+    
+    // Message loop for the dialog
+    MSG msg;
+    BOOL result = FALSE;
+    bool dialogResult = false;
+    
+    while ((result = GetMessage(&msg, nullptr, 0, 0)) != 0) {
+        if (result == -1) {
+            break;
+        }
+        
+        // Handle button clicks
+        if (msg.message == WM_COMMAND) {
+            if (LOWORD(msg.wParam) == IDOK) {
+                dialogResult = true;
+                DestroyWindow(hDlg);
+                break;
+            } else if (LOWORD(msg.wParam) == IDCANCEL) {
+                dialogResult = false;
+                DestroyWindow(hDlg);
+                break;
+            }
+        } else if (msg.message == WM_DESTROY && msg.hwnd == hDlg) {
+            break;
+        }
+        
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+    
+    DeleteObject(hFont);
+    return dialogResult;
 }
 
 // Static callback for the window procedure
@@ -332,22 +411,60 @@ bool DeviceAuthenticator::AuthenticateDevice(const std::string& deviceId)
         return false;
     }
 
-    // Add to known devices if not already there
+    // Find or create the device info
+    std::string deviceName = "Unknown Device";
     if (knownDevices.find(deviceId) == knownDevices.end()) {
-        knownDevices[deviceId] = USBDeviceInfo(deviceId, "Unknown Device");
+        // Try to get a better name for the device
+        HDEVINFO deviceInfoSet = SetupDiGetClassDevs(
+            &GUID_DEVINTERFACE_KEYBOARD,
+            nullptr,
+            nullptr,
+            DIGCF_PRESENT | DIGCF_DEVICEINTERFACE
+        );
+        
+        if (deviceInfoSet != INVALID_HANDLE_VALUE) {
+            SP_DEVINFO_DATA deviceInfoData = {0};
+            deviceInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
+            
+            for (DWORD i = 0; SetupDiEnumDeviceInfo(deviceInfoSet, i, &deviceInfoData); i++) {
+                char buffer[256] = {0};
+                if (SetupDiGetDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, 
+                                                  SPDRP_FRIENDLYNAME, nullptr, 
+                                                  (BYTE*)buffer, sizeof(buffer), nullptr) ||
+                    SetupDiGetDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, 
+                                                  SPDRP_DEVICEDESC, nullptr, 
+                                                  (BYTE*)buffer, sizeof(buffer), nullptr)) {
+                    deviceName = buffer;
+                    break;
+                }
+            }
+            
+            SetupDiDestroyDeviceInfoList(deviceInfoSet);
+        }
+        
+        knownDevices[deviceId] = USBDeviceInfo(deviceId, deviceName);
+    } else {
+        deviceName = knownDevices[deviceId].friendlyName;
     }
     
     // Update last authentication attempt time
     knownDevices[deviceId].lastAuthAttempt = std::chrono::system_clock::now();
 
-    // Prompt user
+    // Generate challenge code and prompt user
     std::string code = GenerateChallengeCode();
-    bool userOk = PromptUserForAuthentication(messageWindow, code);
+    bool userOk = PromptUserForAuthentication(messageWindow, deviceName, code);
+    
     if (userOk) {
         knownDevices[deviceId].authenticated = true;
+        
+        // Notify listeners about the successful authentication
+        NotifyListeners(AuthEvent::DEVICE_AUTHENTICATED, deviceId);
         return true;
     } else {
         authenticationAttempts[deviceId]++;
+        
+        // Notify listeners about the failed authentication
+        NotifyListeners(AuthEvent::DEVICE_AUTH_FAILED, deviceId);
         return false;
     }
 }
@@ -408,4 +525,47 @@ bool DeviceAuthenticator::SetDeviceTrust(const std::string& deviceId, bool trust
         return true;
     }
     return false;
+}
+
+// New function implementation to untrust a device
+bool DeviceAuthenticator::UntrustDevice(const std::string& deviceId)
+{
+    auto it = knownDevices.find(deviceId);
+    if (it != knownDevices.end()) {
+        it->second.authenticated = false;
+        
+        // Reset authentication attempts
+        authenticationAttempts[deviceId] = 0;
+        
+        // Remove from blocked devices if it was blocked
+        blockedDevices.erase(deviceId);
+        
+        // Notify listeners
+        NotifyListeners(AuthEvent::DEVICE_UNTRUSTED, deviceId);
+        
+        return true;
+    }
+    return false;
+}
+
+void DeviceAuthenticator::RegisterListener(IDeviceAuthListener* listener)
+{
+    if (listener && std::find(listeners.begin(), listeners.end(), listener) == listeners.end()) {
+        listeners.push_back(listener);
+    }
+}
+
+void DeviceAuthenticator::UnregisterListener(IDeviceAuthListener* listener)
+{
+    listeners.erase(
+        std::remove(listeners.begin(), listeners.end(), listener),
+        listeners.end()
+    );
+}
+
+void DeviceAuthenticator::NotifyListeners(AuthEvent event, const std::string& deviceId)
+{
+    for (auto listener : listeners) {
+        listener->OnAuthEvent(event, deviceId);
+    }
 }

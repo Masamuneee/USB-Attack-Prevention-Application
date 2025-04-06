@@ -32,7 +32,14 @@ LRESULT CALLBACK BehaviorAnalyzer::BehaviorMonitor(int nCode, WPARAM wParam, LPA
 
         if (analyzer.IsSuspiciousPattern(interval)) {
             std::cerr << "[BehaviorAnalyzer] Suspicious typing speed detected.\n";
-            // Additional response actions could be triggered (e.g., blocking input).
+            
+            // Broadcast notification to registered listeners
+            analyzer.NotifyListeners(AnalyzerEvent::SUSPICIOUS_TYPING_DETECTED);
+            
+            // Block the keystroke by returning 1 if configured to do so
+            if (analyzer.blockSuspiciousInput) {
+                return 1; // Block this keystroke
+            }
         }
     }
     return CallNextHookEx(nullptr, nCode, wParam, lParam);
@@ -46,7 +53,7 @@ BehaviorAnalyzer& BehaviorAnalyzer::GetInstance()
 }
 
 BehaviorAnalyzer::BehaviorAnalyzer()
-    : keyboardHook(nullptr)
+    : keyboardHook(nullptr), blockSuspiciousInput(false)
 {
 }
 
@@ -84,7 +91,9 @@ void BehaviorAnalyzer::AnalyzeKeystrokes(DWORD vkCode)
             if (ContainsBlacklistedWord()) {
                 std::cerr << "[BehaviorAnalyzer] Blacklisted word detected in: "
                           << currentInput << "\n";
-                // Optionally block or notify
+                
+                // Notify listeners of the blacklisted word detection
+                NotifyListeners(AnalyzerEvent::BLACKLISTED_WORD_DETECTED);
             }
             currentInput.clear();
         }
@@ -98,7 +107,9 @@ void BehaviorAnalyzer::AnalyzeKeystrokes(DWORD vkCode)
     if (ContainsBlacklistedWord()) {
         std::cerr << "[BehaviorAnalyzer] Blacklisted word partially matched in: "
                   << currentInput << "\n";
-        // Optionally handle it now
+        
+        // Notify listeners of the partial match
+        NotifyListeners(AnalyzerEvent::BLACKLISTED_WORD_PARTIAL_MATCH);
     }
 }
 
@@ -128,4 +139,36 @@ bool BehaviorAnalyzer::ContainsBlacklistedWord()
         }
     }
     return false;
+}
+
+void BehaviorAnalyzer::RegisterListener(IAnalyzerListener* listener)
+{
+    if (listener) {
+        listeners.push_back(listener);
+    }
+}
+
+void BehaviorAnalyzer::UnregisterListener(IAnalyzerListener* listener)
+{
+    listeners.erase(
+        std::remove(listeners.begin(), listeners.end(), listener),
+        listeners.end()
+    );
+}
+
+void BehaviorAnalyzer::NotifyListeners(AnalyzerEvent event)
+{
+    for (auto listener : listeners) {
+        listener->OnAnalyzerEvent(event);
+    }
+}
+
+void BehaviorAnalyzer::SetBlockSuspiciousInput(bool block)
+{
+    blockSuspiciousInput = block;
+}
+
+bool BehaviorAnalyzer::GetBlockSuspiciousInput() const
+{
+    return blockSuspiciousInput;
 }
