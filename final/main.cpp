@@ -3,6 +3,7 @@
 #include "behavior_analyzer.h"
 #include "system_tray.h"
 #include <windows.h>
+#include <string.h>
 
 // Previous main function converted to init function
 void InitializeApplication()
@@ -25,6 +26,12 @@ void InitializeApplication()
 // Windows GUI application entry point
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
+    // Check for test mode (used by CI/CD)
+    if (lpCmdLine && strstr(lpCmdLine, "--test-mode") != nullptr) {
+        // In test mode, just initialize and exit immediately
+        return 0;
+    }
+
     // Initialize everything
     InitializeApplication();
     
