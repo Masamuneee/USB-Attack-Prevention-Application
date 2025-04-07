@@ -1,4 +1,13 @@
-.vscode
-__pycache__
+# Visual Studio Code settings
+.vscode/*
+
+# Python settings
+*.py[cod]
+__pycache__/*
+*.pyo
+*.pyd
 *.pyc
+*.pdb
+
+# Log files
 final/*.log
