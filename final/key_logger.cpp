@@ -11,12 +11,12 @@ static std::string GetCurrentDateTime()
 {
     auto now = std::chrono::system_clock::now();
     std::time_t nowTime = std::chrono::system_clock::to_time_t(now);
-    std::tm* nowTm = std::localtime(&nowTime);
-    if (!nowTm) {
-        return "Unknown Time";
-    }
+    
+    std::tm nowTm;
+    localtime_s(&nowTm, &nowTime); // Use safer localtime_s instead of localtime
+    
     std::ostringstream oss;
-    oss << std::put_time(nowTm, "%Y-%m-%d %H:%M:%S");
+    oss << std::put_time(&nowTm, "%Y-%m-%d %H:%M:%S");
     return oss.str();
 }
 

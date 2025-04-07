@@ -158,7 +158,11 @@ void SystemTray::CreateTrayIcon()
     nid.hIcon = hIcon;
     
     // Use safe string copy
+    #ifdef _MSC_VER
+    strncpy_s(nid.szTip, sizeof(nid.szTip), "USB Device Monitor (v1.0.3)", sizeof(nid.szTip) - 1);
+    #else
     strncpy(nid.szTip, "USB Device Monitor (v1.0.3)", sizeof(nid.szTip) - 1);
+    #endif
     nid.szTip[sizeof(nid.szTip) - 1] = '\0'; // Ensure null-termination
     
     Shell_NotifyIcon(NIM_ADD, &nid);
@@ -693,8 +697,9 @@ void SystemTray::SetStartupEnabled(bool enable)
             char path[MAX_PATH];
             GetModuleFileNameA(nullptr, path, MAX_PATH);
             
-            // Set the registry value
-            RegSetValueExA(hKey, "USBMonitor", 0, REG_SZ, (BYTE*)path, strlen(path) + 1);
+            // Set the registry value - fix conversion warning
+            DWORD pathLen = static_cast<DWORD>(strlen(path) + 1); // Explicit cast
+            RegSetValueExA(hKey, "USBMonitor", 0, REG_SZ, (BYTE*)path, pathLen);
         } else {
             // Remove the registry value
             RegDeleteValueA(hKey, "USBMonitor");
