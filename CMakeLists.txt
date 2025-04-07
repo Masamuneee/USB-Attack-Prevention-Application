@@ -50,7 +50,7 @@ endif()
 
 # Installation configuration
 install(TARGETS usb_hooks DESTINATION bin)
-install(FILES ${CMAKE_SOURCE_DIR}/usb_icon.ico DESTINATION bin)
+install(FILES ${CMAKE_SOURCE_DIR}/usb_application.ico DESTINATION bin)
 install(FILES ${CMAKE_SOURCE_DIR}/README.md DESTINATION docs)
 
 # CPack configuration for creating installers
@@ -60,9 +60,9 @@ set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "USB Attack Prevention Application")
 set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "USBMonitor")
 
-set(CPACK_NSIS_MUI_ICON "${CMAKE_SOURCE_DIR}/usb_icon.ico")
-set(CPACK_NSIS_MUI_UNIICON "${CMAKE_SOURCE_DIR}/usb_icon.ico")
-set(CPACK_NSIS_INSTALLED_ICON_NAME "bin/usb_icon.ico")
+set(CPACK_NSIS_MUI_ICON "${CMAKE_SOURCE_DIR}/usb_application.ico")
+set(CPACK_NSIS_MUI_UNIICON "${CMAKE_SOURCE_DIR}/usb_application.ico")
+set(CPACK_NSIS_INSTALLED_ICON_NAME "bin/usb_application.ico")
 set(CPACK_NSIS_DISPLAY_NAME "USB Attack Prevention")
 set(CPACK_NSIS_PACKAGE_NAME "USB Attack Prevention")
 set(CPACK_NSIS_HELP_LINK "https://github.com/Masamuneee/USB-Attack-Prevention-Application")
