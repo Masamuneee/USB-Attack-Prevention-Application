@@ -1,8 +1,4 @@
 #include "behavior_analyzer.h"
-#include "key_logger.h"
-#include <chrono>
-#include <iostream>
-#include <sstream>
 
 // We'll need a static time or store it globally for intervals
 static std::chrono::steady_clock::time_point g_lastPress = std::chrono::steady_clock::now();

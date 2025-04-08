@@ -2,11 +2,15 @@
 #define KEY_LOGGER_H
 
 #include <windows.h>
+#include <hidusage.h>
+#include <iostream>
 #include <fstream>
 #include <chrono>
+#include <iomanip>
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <sstream>
 
 // Structure to store device-specific information
 struct KeyboardDeviceInfo {
