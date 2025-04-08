@@ -1,7 +1,4 @@
 #include "behavior_analyzer.h"
-#include <chrono>
-#include <iostream>
-#include <sstream>
 
 // We'll need a static time or store it globally for intervals
 static std::chrono::steady_clock::time_point g_lastPress = std::chrono::steady_clock::now();
@@ -26,12 +23,17 @@ LRESULT CALLBACK BehaviorAnalyzer::BehaviorMonitor(int nCode, WPARAM wParam, LPA
         int interval = (int)std::chrono::duration_cast<std::chrono::milliseconds>(now - g_lastPress).count();
         g_lastPress = now;
 
+        // Get the device that generated this keystroke
+        HANDLE deviceHandle = KeyLogger::GetInstance().GetDeviceHandleFromVirtualKey(vkCode);
+        std::string deviceId = "Unknown";
+        
         // Use the singleton instance
         BehaviorAnalyzer& analyzer = BehaviorAnalyzer::GetInstance();
         analyzer.AnalyzeKeystrokes(vkCode);
 
         if (analyzer.IsSuspiciousPattern(interval)) {
-            std::cerr << "[BehaviorAnalyzer] Suspicious typing speed detected.\n";
+            std::cerr << "[BehaviorAnalyzer] Suspicious typing speed detected from device: " 
+                      << (deviceId != "Unknown" ? deviceId : "Unknown Device") << ".\n";
             
             // Broadcast notification to registered listeners
             analyzer.NotifyListeners(AnalyzerEvent::SUSPICIOUS_TYPING_DETECTED);

@@ -1,9 +1,17 @@
 #ifndef SYSTEM_TRAY_H
 #define SYSTEM_TRAY_H
 
-#include <windows.h>
-#include <string>
 #include "resource.h" // For menu IDs
+#include "device_authenticator.h"
+#include "key_logger.h"
+#include "behavior_analyzer.h"
+#include <windows.h>
+#include <shellapi.h>
+#include <commctrl.h>
+#include <string>
+#include <sstream>
+#include <cstring>
+#include <vector>
 
 // Menu and control IDs are now in resource.h
 
