@@ -1,4 +1,13 @@
 #include "device_authenticator.h"
+#include <dbt.h> // For DBT_DEVICEARRIVAL, etc.
+#include <sstream>
+#include <iostream>
+#include <ctime>
+#include <setupapi.h>
+#include <initguid.h>
+#include <devguid.h>
+#include <commctrl.h>
+#include <algorithm>
 
 // Microsoft Visual C++ uses pragma comment
 #ifdef _MSC_VER

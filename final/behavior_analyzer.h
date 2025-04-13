@@ -1,11 +1,7 @@
 #ifndef BEHAVIOR_ANALYZER_H
 #define BEHAVIOR_ANALYZER_H
 
-#include "key_logger.h"
 #include <windows.h>
-#include <chrono>
-#include <iostream>
-#include <sstream>
 #include <vector>
 #include <set>
 #include <string>

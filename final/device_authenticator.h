@@ -4,18 +4,11 @@
 #include <windows.h>
 #include <dbt.h>         // For device notifications
 #include <initguid.h>    // For DEFINE_GUID
-#include <setupapi.h>
-#include <devguid.h>
-#include <commctrl.h>
 #include <unordered_map>
 #include <chrono>
 #include <string>
 #include <vector>
 #include <set>
-#include <sstream>
-#include <iostream>
-#include <ctime>
-#include <algorithm>
 
 // Event types for device authentication
 enum class AuthEvent {

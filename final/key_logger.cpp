@@ -1,4 +1,11 @@
 #include "key_logger.h"
+#include <iostream>
+#include <fstream>
+#include <chrono>
+#include <iomanip>
+#include <vector>
+#include <sstream>
+#include <hidusage.h>
 
 // Window class name for raw input
 const char* RAW_INPUT_CLASS = "USBMonitorRawInputClass";
