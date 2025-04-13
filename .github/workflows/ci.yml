@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: [ main ]
 
-permissions:
-  contents: write  
-
 jobs:
   build:
     runs-on: windows-latest
@@ -63,4 +60,5 @@ jobs:
           build/Release/usb_hooks.exe
           README.md
           LICENSE
-        token: ${{ secrets.GITHUB_TOKEN }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
