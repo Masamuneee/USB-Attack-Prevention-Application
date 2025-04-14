@@ -5,7 +5,11 @@
 #include <vector>
 #include <set>
 #include <string>
+#include <map>
 #include <algorithm>
+#include <unordered_map>
+#include <chrono>
+#include <fstream>
 
 // Event types that can be detected by the analyzer
 enum class AnalyzerEvent {
@@ -14,27 +18,46 @@ enum class AnalyzerEvent {
     BLACKLISTED_WORD_PARTIAL_MATCH
 };
 
+// Structure to track per-device behavior data
+struct DeviceBehaviorData {
+    std::vector<int> keyPressIntervals;
+    std::string currentInput;
+    std::chrono::steady_clock::time_point lastKeyPressTime;
+    std::string deviceName;
+    std::string deviceId;
+
+    DeviceBehaviorData() {
+        lastKeyPressTime = std::chrono::steady_clock::now();
+    }
+};
+
 // Interface for objects that want to receive analyzer events
 class IAnalyzerListener {
 public:
     virtual ~IAnalyzerListener() = default;
-    virtual void OnAnalyzerEvent(AnalyzerEvent event) = 0;
+    virtual void OnAnalyzerEvent(AnalyzerEvent event, const std::string& deviceId = "") = 0;
 };
 
 class BehaviorAnalyzer
 {
 private:
-    // Static callback function for the low-level keyboard hook
-    static LRESULT CALLBACK BehaviorMonitor(int nCode, WPARAM wParam, LPARAM lParam);
+    // Window handle for Raw Input processing
+    HWND messageWindow;
 
-    // Stores intervals between key presses
-    std::vector<int> keyPressIntervals;
+    // File stream for saving debug information
+    std::ofstream logFile;
+    
+    // Window class name for the hidden message window
+    static const char* ANALYZER_WINDOW_CLASS;
+    
+    // Window procedure for Raw Input messages
+    static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    
+    // Map to track behavior data for each device
+    std::unordered_map<std::string, DeviceBehaviorData> deviceDataMap;
 
     // List of user-defined forbidden words to detect
     std::set<std::string> blacklistedWords;
-
-    // Accumulates typed characters to check for blacklisted words
-    std::string currentInput;
     
     // List of event listeners
     std::vector<IAnalyzerListener*> listeners;
@@ -42,20 +65,23 @@ private:
     // Option to block suspicious input
     bool blockSuspiciousInput;
 
-    // Analyze the current keystroke (e.g., build or clear currentInput)
-    void AnalyzeKeystrokes(DWORD vkCode);
+    // Process a keystroke for a specific device
+    void ProcessKeystroke(const std::string& deviceId, DWORD vkCode);
 
-    // Determine if an incoming interval is suspiciously fast
-    bool IsSuspiciousPattern(int interval);
+    // Analyze the current keystroke (e.g., build or clear currentInput)
+    void AnalyzeKeystrokes(const std::string& deviceId, DWORD vkCode);
+
+    // Check for suspicious activity
+    void CheckForSuspiciousActivity(const std::string& deviceId, int interval);
 
     // Check if the currentInput contains a blacklisted word
-    bool ContainsBlacklistedWord();
+    bool ContainsBlacklistedWord(const std::string& input);
     
     // Notify registered listeners of events
-    void NotifyListeners(AnalyzerEvent event);
+    void NotifyListeners(AnalyzerEvent event, const std::string& deviceId = "");
     
-    // Hook handle
-    HHOOK keyboardHook;
+    // Register for Raw Input
+    void RegisterRawInput();
 
 public:
     BehaviorAnalyzer();
@@ -64,10 +90,10 @@ public:
     // Singleton pattern
     static BehaviorAnalyzer& GetInstance();
 
-    // Installs the low-level hook to watch for suspicious behavior
+    // Start monitoring for suspicious behavior
     void Start();
 
-    // Uninstalls the hook
+    // Stop monitoring
     void Stop();
 
     // Allows adding words to the forbidden list at runtime
@@ -80,6 +106,9 @@ public:
     // Configuration for blocking suspicious input
     void SetBlockSuspiciousInput(bool block);
     bool GetBlockSuspiciousInput() const;
+    
+    // Get device name from handle (helper method)
+    static std::string GetDeviceNameFromHandle(HANDLE hDevice);
 };
 
 #endif // BEHAVIOR_ANALYZER_H

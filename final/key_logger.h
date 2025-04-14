@@ -27,9 +27,6 @@ private:
     // Helper method to log the key press to file
     void LogKeyStroke(DWORD vkCode, int interval);
 
-    // Optional method to check for suspicious timing patterns
-    void CheckForSuspiciousActivity(int interval);
-
 public:
     KeyLogger();
     ~KeyLogger();
