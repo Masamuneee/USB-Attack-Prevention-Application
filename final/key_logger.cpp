@@ -1,10 +1,4 @@
 #include "key_logger.h"
-#include <iostream>
-#include <fstream>
-#include <chrono>
-#include <iomanip>
-#include <vector>
-#include <sstream>
 
 // Utility function to get current date/time in string form.
 static std::string GetCurrentDateTime()
@@ -95,7 +89,6 @@ LRESULT CALLBACK KeyLogger::KeyStrokeLogger(int nCode, WPARAM wParam, LPARAM lPa
         
         // Use the persistent instance
         logger.LogKeyStroke(vkCode, interval);
-        logger.CheckForSuspiciousActivity(interval);
     }
 
     return CallNextHookEx(nullptr, nCode, wParam, lParam);
@@ -153,31 +146,6 @@ void KeyLogger::LogKeyStroke(DWORD vkCode, int interval)
             << " (" << vkCode << ") "
             << "- Interval: " << interval << "ms\n";
     logFile.flush();
-}
-
-void KeyLogger::CheckForSuspiciousActivity(int interval)
-{
-    // Keep track of intervals
-    recentIntervals.push_back(interval);
-    if (recentIntervals.size() > 10) {
-        recentIntervals.erase(recentIntervals.begin());
-    }
-
-    int suspiciousCount = 0;
-    for (int i : recentIntervals) {
-        if (i < 30) {
-            suspiciousCount++;
-        }
-    }
-
-    if (suspiciousCount >= 5) {
-        // Log warning
-        if (logFile.is_open()) {
-            logFile << "[" << GetCurrentDateTime() << "] ALERT: Potential Keystroke Injection (Too Fast)!\n";
-            logFile.flush();
-        }
-        // Additional actions can be performed here
-    }
 }
 
 // Singleton implementation
