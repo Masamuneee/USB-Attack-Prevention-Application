@@ -1,8 +1,4 @@
 #include "behavior_analyzer.h"
-#include <chrono>
-#include <iostream>
-#include <sstream>
-#include <iomanip>
 
 // Define the window class name
 const char* BehaviorAnalyzer::ANALYZER_WINDOW_CLASS = "BehaviorAnalyzerWindowClass";

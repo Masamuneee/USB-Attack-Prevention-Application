@@ -1,10 +1,4 @@
 #include "key_logger.h"
-#include <iostream>
-#include <fstream>
-#include <chrono>
-#include <iomanip>
-#include <vector>
-#include <sstream>
 
 // Utility function to get current date/time in string form.
 static std::string GetCurrentDateTime()

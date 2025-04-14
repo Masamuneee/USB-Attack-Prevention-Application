@@ -2,14 +2,17 @@
 #define BEHAVIOR_ANALYZER_H
 
 #include <windows.h>
-#include <vector>
-#include <set>
-#include <string>
-#include <map>
 #include <algorithm>
-#include <unordered_map>
 #include <chrono>
 #include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <map>
+#include <set>
+#include <sstream>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 // Event types that can be detected by the analyzer
 enum class AnalyzerEvent {

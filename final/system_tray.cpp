@@ -1,13 +1,4 @@
 #include "system_tray.h"
-#include "device_authenticator.h"
-#include "key_logger.h"
-#include "behavior_analyzer.h"
-#include <windows.h>
-#include <shellapi.h>
-#include <sstream>
-#include <cstring>
-#include <commctrl.h>
-#include <vector>
 
 // Window class and message
 const char* TRAY_WINDOW_CLASS = "USBMonitorTrayClass";
