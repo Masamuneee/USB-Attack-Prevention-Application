@@ -1,14 +1,34 @@
 #ifndef DEVICE_AUTHENTICATOR_H
 #define DEVICE_AUTHENTICATOR_H
 
+// Windows API includes
 #include <windows.h>
-#include <dbt.h>         // For device notifications
-#include <initguid.h>    // For DEFINE_GUID
+#include <dbt.h>         
+#include <initguid.h>   // This needs to come before the DEFINE_GUID
+#include <setupapi.h>
+#include <devguid.h>
+#include <commctrl.h>
+
+// Standard library includes
 #include <unordered_map>
 #include <chrono>
 #include <string>
 #include <vector>
 #include <set>
+#include <sstream>
+#include <iostream>
+#include <ctime>
+#include <algorithm>
+
+// Define keyboard device interface GUID
+// Use extern when not defined with INITGUID to prevent multiple definitions
+#ifdef INITGUID
+// This is the actual definition that should appear in only one source file
+DEFINE_GUID(GUID_DEVINTERFACE_KEYBOARD, 0x884b96c3, 0x56ef, 0x11d1, 0xbc, 0x8c, 0x00, 0xa0, 0xc9, 0x14, 0x05, 0xdd);
+#else
+// This is for all other source files - just declare it as extern
+EXTERN_C const GUID DECLSPEC_SELECTANY GUID_DEVINTERFACE_KEYBOARD;
+#endif
 
 // Event types for device authentication
 enum class AuthEvent {
@@ -27,6 +47,7 @@ public:
     virtual void OnAuthEvent(AuthEvent event, const std::string& deviceId) = 0;
 };
 
+// Structure to store USB device information
 struct USBDeviceInfo {
     std::string deviceId;
     std::string friendlyName;
@@ -102,7 +123,7 @@ public:
     // Set device trust status manually
     bool SetDeviceTrust(const std::string& deviceId, bool trusted);
     
-    // Untrust a previously trusted device (new function)
+    // Untrust a previously trusted device
     bool UntrustDevice(const std::string& deviceId);
     
     // Register/unregister for auth events

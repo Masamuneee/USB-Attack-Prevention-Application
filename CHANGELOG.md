@@ -2,6 +2,27 @@
 
 All notable changes to the USB Device Security Suite will be documented in this file.
 
+## [1.0.4] - 2025-04-15
+
+### Added
+- Raw Input API integration for better keyboard event monitoring
+- Cross-compiler compatibility with both MSVC and MinGW
+- Improved device identification through Raw Input API
+
+### Fixed
+- Corrected _WIN32_WINNT redefinition warnings in MinGW builds
+- Fixed localtime_s compatibility issues across different compilers
+- Improved memory management in Raw Input handling
+- Enhanced error handling when registering for device notifications
+- Resolved GUID definition issues with multiple compilation units
+- Fixed build pipeline to properly handle GUID initialization
+
+### Changed
+- Optimized header file structure with proper include organization
+- Improved code documentation and commenting style
+- Enhanced build pipeline with custom version specification
+- Updated CI/CD workflow to allow optional releases with custom versioning
+
 ## [1.0.3] - 2025-04-06
 
 ### Added

@@ -1,6 +1,6 @@
 # USB Attack Prevention Application
 
-**Version:** 1.0.3
+**Version:** 1.0.4
 **Author:** Masamune (Minh Pham) / Lio (Thai Do)
 
 ## Description
@@ -15,6 +15,7 @@ A comprehensive security solution for protecting against malicious USB devices t
 - **Device Trust Management**: Ability to trust and untrust devices through an intuitive UI
 - **Settings Configuration**: Customize application behavior and security preferences
 - **Startup Integration**: Option to launch automatically when Windows starts
+- **Raw Input API**: Enhanced keyboard monitoring with advanced device detection
 
 ## Prerequisites
 

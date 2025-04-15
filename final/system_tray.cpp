@@ -4,8 +4,33 @@
 const char* TRAY_WINDOW_CLASS = "USBMonitorTrayClass";
 const UINT WM_TRAYICON = WM_USER + 1;
 
-// Remove all the custom ListView definitions since they're already defined in commctrl.h
-// We'll use the standard Windows API definitions instead
+// Add missing ListView and shell notification constants
+#ifndef LVS_EX_FULLROWSELECT
+#define LVS_EX_FULLROWSELECT 0x00000020
+#endif
+
+#ifndef LVS_EX_GRIDLINES
+#define LVS_EX_GRIDLINES 0x00000001
+#endif
+
+// Shell version detection for different NOTIFYICONDATA sizes
+#ifndef NOTIFYICON_VERSION
+#define NOTIFYICON_VERSION 3
+#endif
+
+#ifndef NIF_INFO
+#define NIF_INFO 0x00000010
+#endif
+
+#ifndef NIIF_INFO
+#define NIIF_INFO 0x00000001
+#endif
+
+// Define ListView_SetExtendedListViewStyle macro if not defined
+#ifndef ListView_SetExtendedListViewStyle
+#define ListView_SetExtendedListViewStyle(hwndLV, dw) \
+            (DWORD)SendMessage((hwndLV), LVM_SETEXTENDEDLISTVIEWSTYLE, 0, (LPARAM)(dw))
+#endif
 
 // Singleton implementation
 SystemTray& SystemTray::GetInstance()
@@ -23,38 +48,32 @@ LRESULT CALLBACK SystemTray::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
             if (lParam == WM_RBUTTONUP || lParam == WM_LBUTTONUP) {
                 tray.ShowContextMenu();
             }
+            Shell_NotifyIcon(NIM_MODIFY, &tray.nid);
             return 0;
-            
         case WM_COMMAND:
             switch (LOWORD(wParam)) {
                 case IDM_EXIT:
                     tray.Exit();
                     PostQuitMessage(0);
                     return 0;
-                    
                 case IDM_SHOW_DEVICES:
                     tray.ShowDeviceList();
                     return 0;
-                    
                 case IDM_TOGGLE_LOGGING:
                     tray.EnableLogging(!tray.isLoggingEnabled);
                     return 0;
-                    
                 case IDM_SETTINGS:
                     tray.ShowSettingsDialog();
                     return 0;
-                    
                 case IDM_ABOUT:
                     tray.ShowAboutDialog();
                     return 0;
             }
             break;
-            
         case WM_DESTROY:
             PostQuitMessage(0);
             return 0;
     }
-    
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
@@ -67,7 +86,6 @@ SystemTray::SystemTray()
 SystemTray::~SystemTray()
 {
     DeleteTrayIcon();
-    
     if (popupMenu) {
         DestroyMenu(popupMenu);
     }
@@ -81,7 +99,6 @@ SystemTray::~SystemTray()
 bool SystemTray::Initialize()
 {
     // Skip common controls initialization as it's causing issues
-    
     // Register the window class
     WNDCLASSEX wcex = {0};
     wcex.cbSize = sizeof(WNDCLASSEX);
@@ -93,7 +110,7 @@ bool SystemTray::Initialize()
     if (!RegisterClassEx(&wcex)) {
         return false;
     }
-    
+
     // Create the window
     hwnd = CreateWindowEx(
         0,
@@ -106,57 +123,78 @@ bool SystemTray::Initialize()
         GetModuleHandle(nullptr),
         nullptr
     );
-    
     if (!hwnd) {
         return false;
     }
-    
+
     // Create the context menu
     popupMenu = CreatePopupMenu();
     AppendMenu(popupMenu, MF_STRING, IDM_SHOW_DEVICES, "Show USB Devices");
     AppendMenu(popupMenu, MF_STRING | (isLoggingEnabled ? MF_CHECKED : MF_UNCHECKED), IDM_TOGGLE_LOGGING, "Enable Logging");
     AppendMenu(popupMenu, MF_SEPARATOR, 0, nullptr);
     AppendMenu(popupMenu, MF_STRING, IDM_EXIT, "Exit");
-    
+
     // Create the tray icon
     CreateTrayIcon();
-    
     return true;
 }
 
 void SystemTray::CreateTrayIcon()
 {
-    // Try to load the icon from the executable directory
-    std::string iconPath = GetExecutableDirectory() + "\\usb_icon.ico";
-    HICON hIcon = (HICON)LoadImage(
-        nullptr,
-        iconPath.c_str(),
-        IMAGE_ICON,
-        16, 16,
-        LR_LOADFROMFILE
-    );
+    // Load the icon from resources
+    HICON hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_TRAY_ICON));
     
-    // Fallback to the default icon if custom icon not found
+    // If resource loading failed, try to load from file
     if (!hIcon) {
-        hIcon = LoadIcon(nullptr, IDI_APPLICATION);
+        // Try to load the icon from the executable directory
+        std::string iconPath = GetExecutableDirectory() + "\\usb_application.ico";
+        hIcon = (HICON)LoadImage(
+            nullptr,
+            iconPath.c_str(),
+            IMAGE_ICON,
+            16, 16,
+            LR_LOADFROMFILE
+        );
+        
+        // If custom icon failed, use system icons
+        if (!hIcon) {
+            // Use standard system icons instead of IDI_SHIELD (which might not be available)
+            hIcon = LoadIcon(NULL, IDI_APPLICATION);
+            if (!hIcon) {
+                hIcon = LoadIcon(NULL, IDI_EXCLAMATION);
+                if (!hIcon) {
+                    hIcon = LoadIcon(NULL, IDI_WINLOGO);
+                }
+            }
+        }
     }
     
+    // Initialize the NOTIFYICONDATA structure
+    ZeroMemory(&nid, sizeof(nid));
     nid.cbSize = sizeof(NOTIFYICONDATA);
     nid.hWnd = hwnd;
     nid.uID = 1;
-    nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
+    nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP; // Remove NIF_INFO for compatibility
     nid.uCallbackMessage = WM_TRAYICON;
     nid.hIcon = hIcon;
     
     // Use safe string copy
     #ifdef _MSC_VER
-    strncpy_s(nid.szTip, sizeof(nid.szTip), "USB Device Monitor (v1.0.3)", sizeof(nid.szTip) - 1);
+    strncpy_s(nid.szTip, sizeof(nid.szTip), "USB Device Monitor (v1.0.4)", sizeof(nid.szTip) - 1);
     #else
-    strncpy(nid.szTip, "USB Device Monitor (v1.0.3)", sizeof(nid.szTip) - 1);
+    strncpy(nid.szTip, "USB Device Monitor (v1.0.4)", sizeof(nid.szTip) - 1);
     #endif
     nid.szTip[sizeof(nid.szTip) - 1] = '\0'; // Ensure null-termination
     
-    Shell_NotifyIcon(NIM_ADD, &nid);
+    // Add the icon to the system tray - use a simpler approach to avoid version issues
+    if (!Shell_NotifyIcon(NIM_ADD, &nid)) {
+        // If adding failed, try with fewer features
+        nid.uFlags = NIF_ICON | NIF_MESSAGE;
+        Shell_NotifyIcon(NIM_ADD, &nid);
+    }
+    
+    // Set up a periodic timer to ensure the icon stays visible
+    SetTimer(hwnd, 1, 5000, nullptr);  // Timer ID 1, every 5 seconds
 }
 
 void SystemTray::DeleteTrayIcon()
@@ -187,7 +225,6 @@ void SystemTray::ShowContextMenu()
     // Show the menu
     POINT pt;
     GetCursorPos(&pt);
-    
     TrackPopupMenu(
         popupMenu,
         TPM_RIGHTBUTTON | TPM_BOTTOMALIGN,
@@ -205,127 +242,173 @@ void SystemTray::ShowDeviceList()
 {
     // Get the list of connected devices
     std::vector<USBDeviceInfo> devices = DeviceAuthenticator::GetInstance().GetConnectedDevices();
-    
     if (devices.empty()) {
         MessageBoxA(hwnd, "No USB devices found.", "Device List", MB_OK | MB_ICONINFORMATION);
         return;
     }
-    
-    // Create a dialog to display devices
+
+    // Create a dialog to display devices with improved styling
     HWND hDlg = CreateWindowEx(
-        WS_EX_DLGMODALFRAME,
+        WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE,
         "STATIC",
         "USB Device Manager",
-        WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
-        100, 100, 500, 400,
+        WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE | WS_THICKFRAME,
+        100, 100, 650, 450,  // Larger size for better visibility
         hwnd, nullptr, GetModuleHandle(nullptr), nullptr
     );
-    
-    // Create informational text
-    CreateWindowEx(
+
+    // Create informational text with better styling
+    HWND hInfoText = CreateWindowEx(
         0, "STATIC", 
         "Connected USB devices - Use the buttons below to manage device trust status:",
         WS_CHILD | WS_VISIBLE | SS_LEFT,
-        10, 10, 480, 20, 
+        15, 15, 620, 20,
         hDlg, nullptr, GetModuleHandle(nullptr), nullptr
     );
+
+    // Use a better font for the UI text
+    HFONT hFont = CreateFont(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+                            DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                            CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+    if (hFont) {
+        SendMessage(hInfoText, WM_SETFONT, (WPARAM)hFont, TRUE);
+    }
     
-    // Create a listview control
+    // Create a listview control with better styling
     HWND hListView = CreateWindowEx(
-        0, WC_LISTVIEW, "",
-        WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SINGLESEL | WS_BORDER | WS_TABSTOP,
-        10, 40, 480, 280,
+        WS_EX_CLIENTEDGE, 
+        WC_LISTVIEW, "",
+        WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SINGLESEL | WS_BORDER | WS_TABSTOP,
+        15, 40, 620, 320,
         hDlg, (HMENU)IDC_DEVICE_LIST, GetModuleHandle(nullptr), nullptr
     );
+
+    // Enable full row selection and gridlines for better visibility
+    // Use direct SendMessage approach for maximum compatibility
+    SendMessage(hListView, LVM_SETEXTENDEDLISTVIEWSTYLE, 
+                LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES, 
+                LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
     
     // Add columns - using standard Windows API
     LV_COLUMN lvc = {0};
     lvc.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
-    
     lvc.iSubItem = 0;
-    lvc.cx = 230;
+    lvc.cx = 200;
     lvc.pszText = (LPSTR)"Device Name";
     ListView_InsertColumn(hListView, 0, &lvc);
     
     lvc.iSubItem = 1;
-    lvc.cx = 80;
+    lvc.cx = 100;
     lvc.pszText = (LPSTR)"Status";
     ListView_InsertColumn(hListView, 1, &lvc);
     
     lvc.iSubItem = 2;
-    lvc.cx = 150;
+    lvc.cx = 300;
     lvc.pszText = (LPSTR)"Device ID";
     ListView_InsertColumn(hListView, 2, &lvc);
-    
-    // Add items - using standard Windows API
-    LV_ITEM lvi = {0};
-    lvi.mask = LVIF_TEXT | LVIF_PARAM;
-    
+
+    // Apply the font to the ListView
+    if (hFont) {
+        SendMessage(hListView, WM_SETFONT, (WPARAM)hFont, TRUE);
+    }
+
+    // Add items - using standard Windows API with improved display
     for (size_t i = 0; i < devices.size(); i++) {
+        LV_ITEM lvi = {0};
+        lvi.mask = LVIF_TEXT | LVIF_PARAM;
         lvi.iItem = (int)i;
         lvi.lParam = (LPARAM)i;  // Store index for reference
+
+        // Create a uniquely identifiable name for devices with the same name
+        std::string displayName = devices[i].friendlyName;
+        int nameCount = 0;
+        for (size_t j = 0; j < i; j++) {
+            if (devices[j].friendlyName == devices[i].friendlyName) {
+                nameCount++;
+            }
+        }
         
+        if (nameCount > 0) {
+            displayName += " (" + std::to_string(nameCount + 1) + ")";
+        }
+
         // Device name
         lvi.iSubItem = 0;
-        lvi.pszText = (LPSTR)devices[i].friendlyName.c_str();
+        lvi.pszText = (LPSTR)displayName.c_str();
         ListView_InsertItem(hListView, &lvi);
-        
+
         // Status
         lvi.iSubItem = 1;
-        lvi.pszText = (LPSTR)(devices[i].authenticated ? "Trusted" : "Not Trusted");
+        std::string status = devices[i].authenticated ? "Trusted" : "Not Trusted";
+        lvi.pszText = (LPSTR)status.c_str();
         ListView_SetItem(hListView, &lvi);
-        
-        // Device ID (shortened for display)
+
+        // Device ID - show a shortened version
         lvi.iSubItem = 2;
         std::string shortId = devices[i].deviceId;
-        if (shortId.length() > 20) {
-            shortId = shortId.substr(0, 17) + "...";
+        if (shortId.length() > 40) {
+            shortId = shortId.substr(0, 37) + "...";
         }
         lvi.pszText = (LPSTR)shortId.c_str();
         ListView_SetItem(hListView, &lvi);
     }
-    
+
     // Store device list for button callbacks
     SetProp(hDlg, "DeviceList", (HANDLE)&devices);
-    
-    // Add buttons
+
+    // Add buttons with improved styling
     HWND hBtnTrust = CreateWindow(
         "BUTTON", "Trust Device",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
-        10, 330, 100, 25,
+        15, 375, 120, 30,
         hDlg, (HMENU)IDM_TRUST_DEVICE, GetModuleHandle(nullptr), nullptr
     );
     
     HWND hBtnUntrust = CreateWindow(
         "BUTTON", "Untrust Device",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
-        120, 330, 100, 25,
+        145, 375, 120, 30,
         hDlg, (HMENU)IDM_UNTRUST_DEVICE, GetModuleHandle(nullptr), nullptr
     );
-    
+
     HWND hBtnDetails = CreateWindow(
         "BUTTON", "View Details",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
-        230, 330, 100, 25,
+        275, 375, 120, 30,
         hDlg, (HMENU)IDM_DEVICE_DETAILS, GetModuleHandle(nullptr), nullptr
     );
     
     HWND hBtnClose = CreateWindow(
         "BUTTON", "Close",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
-        390, 330, 100, 25,
+        515, 375, 120, 30,
         hDlg, (HMENU)IDOK, GetModuleHandle(nullptr), nullptr
     );
     
-    // Create a status bar
-    CreateStatusWindow(
-        WS_CHILD | WS_VISIBLE,
+    // Apply font to buttons
+    if (hFont) {
+        SendMessage(hBtnTrust, WM_SETFONT, (WPARAM)hFont, TRUE);
+        SendMessage(hBtnUntrust, WM_SETFONT, (WPARAM)hFont, TRUE);
+        SendMessage(hBtnDetails, WM_SETFONT, (WPARAM)hFont, TRUE);
+        SendMessage(hBtnClose, WM_SETFONT, (WPARAM)hFont, TRUE);
+    }
+    
+    // Create a status bar with improved styling
+    HWND hStatusBar = CreateStatusWindow(
+        WS_CHILD | WS_VISIBLE | SBARS_SIZEGRIP,
         "Select a device to view or modify its trust settings",
         hDlg, IDC_STATUS_BAR
     );
+    if (hFont) {
+        SendMessage(hStatusBar, WM_SETFONT, (WPARAM)hFont, TRUE);
+    }
     
     // Device selection handler
     SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)this);
+
+    // Create a separate copy of device list for the dialog procedure
+    std::vector<USBDeviceInfo>* deviceListCopy = new std::vector<USBDeviceInfo>(devices);
+    SetProp(hDlg, "DeviceListData", deviceListCopy);
     
     // Store dialog procedure in a static function to avoid lambda conversion issues
     struct DialogProcHelper {
@@ -335,9 +418,17 @@ void SystemTray::ShowDeviceList()
             switch (msg) {
                 case WM_COMMAND:
                     if (LOWORD(wParam) == IDOK) {
+                        // Clean up device list copy before destroying window
+                        std::vector<USBDeviceInfo>* deviceListCopy = 
+                            (std::vector<USBDeviceInfo>*)GetProp(hwnd, "DeviceListData");
+                        if (deviceListCopy) {
+                            delete deviceListCopy;
+                        }
+                        
+                        RemoveProp(hwnd, "DeviceListData");
                         DestroyWindow(hwnd);
                         return TRUE;
-                    } 
+                    }
                     else if (LOWORD(wParam) == IDM_TRUST_DEVICE || 
                              LOWORD(wParam) == IDM_UNTRUST_DEVICE || 
                              LOWORD(wParam) == IDM_DEVICE_DETAILS) {
@@ -346,42 +437,85 @@ void SystemTray::ShowDeviceList()
                         int selectedIndex = ListView_GetNextItem(hList, -1, LVNI_SELECTED);
                         
                         if (selectedIndex >= 0) {
-                            auto& devices = *(std::vector<USBDeviceInfo>*)GetProp(hwnd, "DeviceList");
+                            std::vector<USBDeviceInfo>* deviceListCopy = 
+                                (std::vector<USBDeviceInfo>*)GetProp(hwnd, "DeviceListData");
+                            
+                            if (!deviceListCopy || selectedIndex >= (int)deviceListCopy->size()) {
+                                MessageBoxA(hwnd, "Error accessing device data. Please try again.", 
+                                          "Error", MB_OK | MB_ICONERROR);
+                                return TRUE;
+                            }
+                            
                             DeviceAuthenticator& auth = DeviceAuthenticator::GetInstance();
+                            std::string deviceId = (*deviceListCopy)[selectedIndex].deviceId;
                             
                             if (LOWORD(wParam) == IDM_TRUST_DEVICE) {
-                                if (auth.SetDeviceTrust(devices[selectedIndex].deviceId, true)) {
+                                if (auth.SetDeviceTrust(deviceId, true)) {
                                     // Update the status in the list
+                                    (*deviceListCopy)[selectedIndex].authenticated = true;
+                                    // Update UI
                                     LV_ITEM lvi = {0};
                                     lvi.mask = LVIF_TEXT;
                                     lvi.iItem = selectedIndex;
                                     lvi.iSubItem = 1;
                                     lvi.pszText = (LPSTR)"Trusted";
                                     ListView_SetItem(hList, &lvi);
-                                    devices[selectedIndex].authenticated = true;
+                                    SetWindowTextA(GetDlgItem(hwnd, IDC_STATUS_BAR), 
+                                                "Device has been trusted successfully");
+                                } else {
+                                    MessageBoxA(hwnd, "Failed to trust device. The device may no longer be connected.", 
+                                              "Trust Failed", MB_OK | MB_ICONERROR);
                                 }
                             }
                             else if (LOWORD(wParam) == IDM_UNTRUST_DEVICE) {
-                                if (auth.UntrustDevice(devices[selectedIndex].deviceId)) {
+                                if (auth.UntrustDevice(deviceId)) {
                                     // Update the status in the list
+                                    (*deviceListCopy)[selectedIndex].authenticated = false;
+                                    // Update UI
                                     LV_ITEM lvi = {0};
                                     lvi.mask = LVIF_TEXT;
                                     lvi.iItem = selectedIndex;
                                     lvi.iSubItem = 1;
                                     lvi.pszText = (LPSTR)"Not Trusted";
                                     ListView_SetItem(hList, &lvi);
-                                    devices[selectedIndex].authenticated = false;
+                                    SetWindowTextA(GetDlgItem(hwnd, IDC_STATUS_BAR), 
+                                                "Device has been untrusted successfully");
+                                } else {
+                                    MessageBoxA(hwnd, "Failed to untrust device. The device may no longer be connected.", 
+                                              "Untrust Failed", MB_OK | MB_ICONERROR);
                                 }
                             }
                             else if (LOWORD(wParam) == IDM_DEVICE_DETAILS) {
-                                std::string message = "Device ID: " + devices[selectedIndex].deviceId + 
-                                                     "\nFriendly Name: " + devices[selectedIndex].friendlyName +
-                                                     "\nStatus: " + (devices[selectedIndex].authenticated ? "Trusted" : "Not Trusted");
-                                                     
+                                const USBDeviceInfo& device = (*deviceListCopy)[selectedIndex];
+                                
+                                std::string message = "Device Details:\n\n";
+                                message += "Name: " + device.friendlyName + "\n";
+                                message += "Status: " + std::string(device.authenticated ? "Trusted" : "Not Trusted") + "\n";
+                                message += "Device ID: " + device.deviceId + "\n";
+                                
+                                // Add last authentication attempt time if available
+                                if (device.lastAuthAttempt.time_since_epoch().count() > 0) {
+                                    std::time_t authTime = std::chrono::system_clock::to_time_t(device.lastAuthAttempt);
+                                    std::tm authTm = {};
+                                    
+                                    #ifdef _MSC_VER
+                                        localtime_s(&authTm, &authTime);
+                                    #else
+                                        std::tm* temp_tm = localtime(&authTime);
+                                        if (temp_tm) {
+                                            authTm = *temp_tm;
+                                        }
+                                    #endif
+                                    
+                                    char timeBuf[64] = {0};
+                                    strftime(timeBuf, sizeof(timeBuf), "%Y-%m-%d %H:%M:%S", &authTm);
+                                    
+                                    message += "Last Authentication: " + std::string(timeBuf) + "\n";
+                                }
+                                
                                 MessageBoxA(hwnd, message.c_str(), "Device Details", MB_OK | MB_ICONINFORMATION);
                             }
-                        }
-                        else {
+                        } else {
                             MessageBoxA(hwnd, "Please select a device first", "No Selection", MB_OK | MB_ICONINFORMATION);
                         }
                         return TRUE;
@@ -393,37 +527,70 @@ void SystemTray::ShowDeviceList()
                     if (nmhdr->code == LVN_ITEMCHANGED && nmhdr->idFrom == IDC_DEVICE_LIST) {
                         NMLISTVIEW* nmlv = (NMLISTVIEW*)lParam;
                         if (nmlv->uNewState & LVIS_SELECTED) {
-                            auto& devices = *(std::vector<USBDeviceInfo>*)GetProp(hwnd, "DeviceList");
-                            int selectedIndex = nmlv->iItem;
+                            std::vector<USBDeviceInfo>* deviceListCopy = 
+                                (std::vector<USBDeviceInfo>*)GetProp(hwnd, "DeviceListData");
                             
-                            // Update status bar with selected device info
-                            if (selectedIndex >= 0 && selectedIndex < (int)devices.size()) {
-                                std::string statusText = "Selected device: " + devices[selectedIndex].friendlyName;
-                                SetWindowTextA(GetDlgItem(hwnd, IDC_STATUS_BAR), statusText.c_str());
+                            if (deviceListCopy) {
+                                int selectedIndex = nmlv->iItem;
+                                if (selectedIndex >= 0 && selectedIndex < (int)deviceListCopy->size()) {
+                                    const USBDeviceInfo& device = (*deviceListCopy)[selectedIndex];
+                                    
+                                    // Format status bar text with more info
+                                    std::string statusText = "Selected: " + device.friendlyName + 
+                                                           " | Status: " + (device.authenticated ? "Trusted" : "Not Trusted");
+                                    SetWindowTextA(GetDlgItem(hwnd, IDC_STATUS_BAR), statusText.c_str());
+                                }
                             }
                         }
                     }
                     break;
                 }
-                    
+                
                 case WM_DESTROY:
-                    RemoveProp(hwnd, "DeviceList");
+                    // Clean up if not already done
+                    std::vector<USBDeviceInfo>* deviceListCopy = 
+                        (std::vector<USBDeviceInfo>*)GetProp(hwnd, "DeviceListData");
+                    
+                    if (deviceListCopy) {
+                        delete deviceListCopy;
+                        RemoveProp(hwnd, "DeviceListData");
+                    }
+                    
+                    // Delete font
+                    HFONT hFont = (HFONT)GetProp(hwnd, "DialogFont");
+                    if (hFont) {
+                        DeleteObject(hFont);
+                        RemoveProp(hwnd, "DialogFont");
+                    }
                     break;
             }
             
             return DefWindowProc(hwnd, msg, wParam, lParam);
         }
     };
-    
     // Set the window procedure using the static method
     SetWindowLongPtr(hDlg, GWLP_WNDPROC, (LONG_PTR)DialogProcHelper::DeviceListProc);
+    
+    // Store the font for cleanup
+    SetProp(hDlg, "DialogFont", hFont);
     
     // Show and bring the dialog to front
     ShowWindow(hDlg, SW_SHOW);
     SetForegroundWindow(hDlg);
     UpdateWindow(hDlg);
     
-    // Modal message loop will be handled by the main application loop
+    // Center the dialog on the screen
+    RECT rcDlg, rcDesktop;
+    GetWindowRect(hDlg, &rcDlg);
+    GetWindowRect(GetDesktopWindow(), &rcDesktop);
+    
+    int dlgWidth = rcDlg.right - rcDlg.left;
+    int dlgHeight = rcDlg.bottom - rcDlg.top;
+    
+    int newX = (rcDesktop.right - dlgWidth) / 2;
+    int newY = (rcDesktop.bottom - dlgHeight) / 2;
+    
+    SetWindowPos(hDlg, nullptr, newX, newY, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
 }
 
 void SystemTray::RunMessageLoop()
@@ -466,7 +633,7 @@ void SystemTray::ShowSettingsDialog()
         100, 100, 400, 300,
         hwnd, nullptr, GetModuleHandle(nullptr), nullptr
     );
-    
+
     // Create general settings section
     HWND hGeneralGroup = CreateWindowEx(
         0, "BUTTON", "General Settings",
@@ -474,7 +641,7 @@ void SystemTray::ShowSettingsDialog()
         10, 10, 380, 120,
         hDlg, nullptr, GetModuleHandle(nullptr), nullptr
     );
-    
+
     // Create checkboxes for settings
     HWND hCbLogging = CreateWindowEx(
         0, "BUTTON", "Enable Keypress Logging",
@@ -526,7 +693,6 @@ void SystemTray::ShowSettingsDialog()
         hDlg, (HMENU)IDC_BTN_ADD_KEYWORD, GetModuleHandle(nullptr), nullptr
     );
     
-    // Show current blacklisted words
     CreateWindowEx(
         0, "STATIC", "Current blacklist:",
         WS_CHILD | WS_VISIBLE,
@@ -570,13 +736,8 @@ void SystemTray::ShowSettingsDialog()
     
     // Populate blacklist
     BehaviorAnalyzer& analyzer = BehaviorAnalyzer::GetInstance();
-    
-    // NOTE: We don't have direct access to the blacklisted words in the analyzer
-    // This is a placeholder - you would need to add a method to BehaviorAnalyzer
-    // to retrieve the current list of blacklisted words
-    // For now, add the default ones we know about
     SendMessageA(hListBlacklist, LB_ADDSTRING, 0, (LPARAM)"cmd");
-    SendMessageA(hListBlacklist, LB_ADDSTRING, 0, (LPARAM)"powershell");
+    SendMessageA(hListBlacklist, LB_ADDSTRING, 0, (LPARAM)"powershell");    
     
     // Set up dialog procedure using static function instead of lambda
     struct DialogProcHelper {
@@ -586,19 +747,17 @@ void SystemTray::ShowSettingsDialog()
             switch (msg) {
                 case WM_COMMAND:
                     if (LOWORD(wParam) == IDOK) {
-                        // Save settings
                         bool enableLogging = (SendDlgItemMessage(hwnd, IDC_CB_ENABLE_LOGGING, BM_GETCHECK, 0, 0) == BST_CHECKED);
                         bool blockSuspicious = (SendDlgItemMessage(hwnd, IDC_CB_BLOCK_SUSPICIOUS, BM_GETCHECK, 0, 0) == BST_CHECKED);
                         bool startWithWindows = (SendDlgItemMessage(hwnd, IDC_CB_STARTUP, BM_GETCHECK, 0, 0) == BST_CHECKED);
                         
-                        // Apply settings
                         pThis->EnableLogging(enableLogging);
                         BehaviorAnalyzer::GetInstance().SetBlockSuspiciousInput(blockSuspicious);
                         pThis->SetStartupEnabled(startWithWindows);
                         
                         DestroyWindow(hwnd);
                         return TRUE;
-                    } 
+                    }
                     else if (LOWORD(wParam) == IDCANCEL) {
                         DestroyWindow(hwnd);
                         return TRUE;
@@ -606,15 +765,9 @@ void SystemTray::ShowSettingsDialog()
                     else if (LOWORD(wParam) == IDC_BTN_ADD_KEYWORD) {
                         char keyword[100] = {0};
                         GetDlgItemTextA(hwnd, IDC_EDIT_KEYWORD, keyword, 100);
-                        
                         if (keyword[0] != '\0') {
-                            // Add to list box
                             SendDlgItemMessageA(hwnd, IDC_LIST_BLACKLIST, LB_ADDSTRING, 0, (LPARAM)keyword);
-                            
-                            // Add to analyzer
                             BehaviorAnalyzer::GetInstance().AddBlacklistedWord(keyword);
-                            
-                            // Clear input field
                             SetDlgItemTextA(hwnd, IDC_EDIT_KEYWORD, "");
                         }
                         return TRUE;
@@ -622,22 +775,16 @@ void SystemTray::ShowSettingsDialog()
                     else if (LOWORD(wParam) == IDC_BTN_REMOVE_KEYWORD) {
                         HWND hList = GetDlgItem(hwnd, IDC_LIST_BLACKLIST);
                         int sel = SendMessage(hList, LB_GETCURSEL, 0, 0);
-                        
                         if (sel != LB_ERR) {
                             char word[100] = {0};
                             SendMessageA(hList, LB_GETTEXT, sel, (LPARAM)word);
-                            
-                            // Remove from list box
                             SendMessage(hList, LB_DELETESTRING, sel, 0);
-                            
-                            // NOTE: We would need to add a RemoveBlacklistedWord method to BehaviorAnalyzer
-                            // This is a placeholder
                             // BehaviorAnalyzer::GetInstance().RemoveBlacklistedWord(word);
                         }
                         return TRUE;
                     }
                     break;
-                    
+                
                 case WM_DESTROY:
                     break;
             }
@@ -645,11 +792,7 @@ void SystemTray::ShowSettingsDialog()
             return DefWindowProc(hwnd, msg, wParam, lParam);
         }
     };
-    
-    // Set the window procedure using the static method
     SetWindowLongPtr(hDlg, GWLP_WNDPROC, (LONG_PTR)DialogProcHelper::SettingsDialogProc);
-    
-    // Show and center dialog
     ShowWindow(hDlg, SW_SHOW);
     SetForegroundWindow(hDlg);
     UpdateWindow(hDlg);
@@ -657,45 +800,33 @@ void SystemTray::ShowSettingsDialog()
 
 bool SystemTray::IsStartupEnabled()
 {
-    // Check if the app is set to run at startup
     HKEY hKey;
     bool enabled = false;
-    
     if (RegOpenKeyExA(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", 
                       0, KEY_READ, &hKey) == ERROR_SUCCESS) {
         char value[MAX_PATH] = {0};
         DWORD size = sizeof(value);
-        
         if (RegQueryValueExA(hKey, "USBMonitor", nullptr, nullptr, (BYTE*)value, &size) == ERROR_SUCCESS) {
             enabled = true;
         }
-        
         RegCloseKey(hKey);
     }
-    
     return enabled;
 }
 
 void SystemTray::SetStartupEnabled(bool enable)
 {
     HKEY hKey;
-    
     if (RegOpenKeyExA(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", 
                       0, KEY_WRITE, &hKey) == ERROR_SUCCESS) {
-        
         if (enable) {
-            // Get the executable path
             char path[MAX_PATH];
             GetModuleFileNameA(nullptr, path, MAX_PATH);
-            
-            // Set the registry value - fix conversion warning
             DWORD pathLen = static_cast<DWORD>(strlen(path) + 1); // Explicit cast
             RegSetValueExA(hKey, "USBMonitor", 0, REG_SZ, (BYTE*)path, pathLen);
         } else {
-            // Remove the registry value
             RegDeleteValueA(hKey, "USBMonitor");
         }
-        
         RegCloseKey(hKey);
     }
 }
@@ -705,7 +836,7 @@ void SystemTray::ShowAboutDialog()
     MessageBoxA(
         hwnd,
         "USB Attack Prevention Application\n"
-        "Version 1.0.3\n\n"
+        "Version 1.0.4\n\n"
         "A comprehensive security solution for protecting against malicious USB devices.\n\n"
         "Authors: Masamune (Minh Pham) / Lio (Thai Do)",
         "About USB Monitor",
