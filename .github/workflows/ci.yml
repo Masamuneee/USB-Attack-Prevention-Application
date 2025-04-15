@@ -13,6 +13,11 @@ on:
         default: false
         type: boolean
 
+permissions:
+  contents: write 
+  issues: read
+  pull-requests: read
+
 jobs:
   build:
     runs-on: windows-latest
@@ -76,5 +81,4 @@ jobs:
           build/Release/usb_hooks.exe
           README.md
           LICENSE
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.GITHUB_TOKEN }}
