@@ -11,3 +11,8 @@ __pycache__/*
 
 # Log files
 final/*.log
+*.log
+
+# Execution files
+*.exe
+final/*.exe

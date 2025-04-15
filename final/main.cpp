@@ -1,5 +1,6 @@
-#include "key_logger.h"
+// Include device_authenticator.h first to ensure GUID is defined once
 #include "device_authenticator.h"
+#include "key_logger.h"
 #include "behavior_analyzer.h"
 #include "system_tray.h"
 #include <windows.h>

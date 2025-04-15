@@ -6,8 +6,16 @@ static std::string GetCurrentDateTime()
     auto now = std::chrono::system_clock::now();
     std::time_t nowTime = std::chrono::system_clock::to_time_t(now);
     
-    std::tm nowTm;
-    localtime_s(&nowTm, &nowTime); // Use safer localtime_s instead of localtime
+    std::tm nowTm = {};
+    #ifdef _MSC_VER
+        localtime_s(&nowTm, &nowTime); // Use safer localtime_s for MSVC
+    #else
+        // Use standard localtime for non-MSVC compilers
+        std::tm* temp_tm = localtime(&nowTime);
+        if (temp_tm) {
+            nowTm = *temp_tm;
+        }
+    #endif
     
     std::ostringstream oss;
     oss << std::put_time(&nowTm, "%Y-%m-%d %H:%M:%S");

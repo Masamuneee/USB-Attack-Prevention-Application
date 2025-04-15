@@ -1,0 +1,35 @@
+#include <windows.h>
+#include "resource.h"
+
+// System tray icon - using existing icon file
+IDI_TRAY_ICON ICON "usb_application.ico"
+
+// Version information
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION     1,0,4,0
+PRODUCTVERSION  1,0,4,0
+FILEFLAGSMASK   0x3fL
+FILEFLAGS       0x0L
+FILEOS          VOS__WINDOWS32
+FILETYPE        VFT_APP
+FILESUBTYPE     0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904E4"
+        BEGIN
+            VALUE "CompanyName",      "USB Security Research Team"
+            VALUE "FileDescription",  "USB Device Security Monitor"
+            VALUE "FileVersion",      "1.0.4.0"
+            VALUE "InternalName",     "usb_hooks"
+            VALUE "LegalCopyright",   "© 2025 Masamune (Minh Pham) / Lio (Thai Do)"
+            VALUE "OriginalFilename", "usb_hooks.exe"
+            VALUE "ProductName",      "USB Attack Prevention Application"
+            VALUE "ProductVersion",   "1.0.4.0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1252
+    END
+END

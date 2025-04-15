@@ -5,6 +5,13 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      create_release:
+        description: 'Create a release?'
+        required: true
+        default: false
+        type: boolean
 
 jobs:
   build:
@@ -35,7 +42,7 @@ jobs:
         ctest -C Release
 
     - name: Package Release
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      if: github.event_name == 'workflow_dispatch' && inputs.create_release == true || (github.event_name == 'push' && github.ref == 'refs/heads/main')
       run: |
         cd build
         cpack -C Release
@@ -47,13 +54,21 @@ jobs:
         path: build/Release/usb_hooks.exe
         retention-days: 90
 
+    - name: Extract version from README
+      if: github.event_name == 'workflow_dispatch' && inputs.create_release == true
+      id: version
+      run: |
+        VERSION=$(grep -oP '(?<=\*\*Version:\*\* )[\d\.]+' README.md | head -n 1)
+        echo "Using version: $VERSION"
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+      shell: bash
+
     - name: Create Release
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-      id: create_release
+      if: github.event_name == 'workflow_dispatch' && inputs.create_release == true
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: v${{ github.run_number }}
-        name: Release v${{ github.run_number }}
+        tag_name: v${{ steps.version.outputs.version }}
+        name: Release v${{ steps.version.outputs.version }}
         draft: false
         prerelease: false
         files: |

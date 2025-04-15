@@ -1,13 +1,17 @@
 #ifndef KEY_LOGGER_H
 #define KEY_LOGGER_H
 
+// Windows API includes
 #include <windows.h>
+
+// Standard library includes
 #include <chrono>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <vector>
 #include <sstream>
+#include <ctime>
 
 class KeyLogger
 {

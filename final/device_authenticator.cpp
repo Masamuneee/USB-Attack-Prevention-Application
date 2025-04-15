@@ -1,13 +1,5 @@
+// Include the header first, which has the GUID declaration
 #include "device_authenticator.h"
-#include <dbt.h> // For DBT_DEVICEARRIVAL, etc.
-#include <sstream>
-#include <iostream>
-#include <ctime>
-#include <setupapi.h>
-#include <initguid.h>
-#include <devguid.h>
-#include <commctrl.h>
-#include <algorithm>
 
 // Microsoft Visual C++ uses pragma comment
 #ifdef _MSC_VER
@@ -16,12 +8,6 @@
 #endif
 
 // For MinGW, you need to add -lsetupapi when compiling
-
-// Define keyboard device interface GUID if not already defined
-#ifndef GUID_DEVINTERFACE_KEYBOARD
-// HID keyboard GUID
-DEFINE_GUID(GUID_DEVINTERFACE_KEYBOARD, 0x884b96c3, 0x56ef, 0x11d1, 0xbc, 0x8c, 0x00, 0xa0, 0xc9, 0x14, 0x05, 0xdd);
-#endif
 
 // Define a custom dialog resource ID since we don't have a resource file
 #define IDD_DIALOG_AUTH 1001
