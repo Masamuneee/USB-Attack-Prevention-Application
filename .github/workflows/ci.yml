@@ -58,7 +58,8 @@ jobs:
       if: github.event_name == 'workflow_dispatch' && inputs.create_release == true
       id: version
       run: |
-        VERSION=$(grep -oP '(?<=\*\*Version:\*\* )[\d\.]+' README.md | head -n 1)
+        # Simplified version extraction that doesn't rely on grep -P (which is locale-dependent)
+        VERSION=$(grep "Version:" README.md | head -n 1 | sed 's/.*Version:\*\* \([0-9.]*\).*/\1/')
         echo "Using version: $VERSION"
         echo "version=$VERSION" >> $GITHUB_OUTPUT
       shell: bash
