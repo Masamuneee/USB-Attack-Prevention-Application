@@ -8,6 +8,8 @@
 #include <setupapi.h>
 #include <devguid.h>
 #include <commctrl.h>
+#include <cfgmgr32.h>  // For CM_* functions
+#include <fstream>    // Add for ofstream/ifstream support
 
 // Standard library includes
 #include <unordered_map>
@@ -53,10 +55,11 @@ struct USBDeviceInfo {
     std::string friendlyName;
     bool authenticated;
     std::chrono::system_clock::time_point lastAuthAttempt;
+    bool isEjected;  // Track if the device is currently ejected
     
-    USBDeviceInfo() : authenticated(false) {}
+    USBDeviceInfo() : authenticated(false), isEjected(false) {}
     USBDeviceInfo(const std::string& id, const std::string& name) 
-        : deviceId(id), friendlyName(name), authenticated(false) {}
+        : deviceId(id), friendlyName(name), authenticated(false), isEjected(false) {}
 };
 
 class DeviceAuthenticator
@@ -86,6 +89,12 @@ private:
     // List of event listeners
     std::vector<IDeviceAuthListener*> listeners;
 
+    // Tracks ejected devices that need to be restored on exit
+    std::set<std::string> ejectedDevices;
+    
+    // Current device being authenticated
+    std::string currentAuthDeviceId;
+
     // Attempts to authenticate a newly detected device
     bool AuthenticateDevice(const std::string& deviceId);
 
@@ -103,6 +112,19 @@ private:
     
     // Notify registered listeners of events
     void NotifyListeners(AuthEvent event, const std::string& deviceId);
+
+    // Eject a device by disabling it
+    bool EjectDevice(const std::string& deviceId);
+    
+    // Restore an ejected device
+    bool RestoreDevice(const std::string& deviceId);
+    
+    // Get device instance ID from device path
+    std::string GetDeviceInstanceIdFromPath(const std::string& devicePath);
+
+    // Methods for device settings persistence
+    void SaveDeviceSettings();
+    void LoadDeviceSettings();
 
 public:
     DeviceAuthenticator();
@@ -129,6 +151,28 @@ public:
     // Register/unregister for auth events
     void RegisterListener(IDeviceAuthListener* listener);
     void UnregisterListener(IDeviceAuthListener* listener);
+
+    // Eject untrusted devices
+    void EjectUntrustedDevices();
+    
+    // Eject all devices except the one specified
+    void EjectAllExcept(const std::string& deviceId);
+    
+    // Restore all ejected devices
+    void RestoreAllEjectedDevices();
+    
+    // Public method to eject a specific device by ID (for UI)
+    bool EjectDeviceById(const std::string& deviceId) {
+        return EjectDevice(deviceId);
+    }
+    
+    // Public method to restore a specific device by ID (for UI)
+    bool RestoreDeviceById(const std::string& deviceId) {
+        return RestoreDevice(deviceId);
+    }
+    
+    // Get the device instance ID from the setup API
+    static std::string GetDeviceInstanceId(HDEVINFO deviceInfoSet, PSP_DEVINFO_DATA deviceInfoData);
 };
 
 #endif // DEVICE_AUTHENTICATOR_H

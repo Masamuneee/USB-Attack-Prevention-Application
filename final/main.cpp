@@ -5,6 +5,7 @@
 #include "system_tray.h"
 #include <windows.h>
 #include <string.h>
+#include <iostream>
 
 // Previous main function converted to init function
 void InitializeApplication()
@@ -33,8 +34,22 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         return 0;
     }
 
+    // Check for eject mode or admin mode
+    bool ejectMode = (lpCmdLine && (strstr(lpCmdLine, "--eject-mode") != nullptr));
+    bool adminMode = (lpCmdLine && (strstr(lpCmdLine, "--admin-mode") != nullptr));
+
     // Initialize everything
     InitializeApplication();
+    
+    // Set eject mode if requested
+    if (ejectMode || adminMode) {
+        std::cerr << "Running in " << (ejectMode ? "eject" : "admin") << " mode" << std::endl;
+        
+        // For eject mode, immediately eject all untrusted devices
+        if (ejectMode) {
+            DeviceAuthenticator::GetInstance().EjectUntrustedDevices();
+        }
+    }
     
     // Initialize and run the system tray
     SystemTray& tray = SystemTray::GetInstance();
