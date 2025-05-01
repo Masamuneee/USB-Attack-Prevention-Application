@@ -1,6 +1,6 @@
 # USB Attack Prevention Application
 
-**Version:** 1.0.4
+**Version:** 1.0.5
 **Author:** Masamune (Minh Pham) / Lio (Thai Do)
 
 ## Description
@@ -13,6 +13,7 @@ A comprehensive security solution for protecting against malicious USB devices t
 - **Behavior Analysis**: Detects suspicious keystroke patterns and blocks potentially harmful commands
 - **System Tray Integration**: Easy access to device management and application controls
 - **Device Trust Management**: Ability to trust and untrust devices through an intuitive UI
+- **Enhanced Device Ejection**: Automatically eject untrusted devices with detailed device identification
 - **Settings Configuration**: Customize application behavior and security preferences
 - **Startup Integration**: Option to launch automatically when Windows starts
 - **Raw Input API**: Enhanced keyboard monitoring with advanced device detection
@@ -39,11 +40,18 @@ For Windows users without make installed, use the compile.bat script:
 compile.bat
 ```
 
+### Using administrative privileges
+For device ejection functionality, you can run with administrative privileges:
+
+```
+StartApp.bat
+```
+
 ### Manual compilation
 You can also compile manually with:
 
 ```
-g++ final/key_logger.cpp final/device_authenticator.cpp final/behavior_analyzer.cpp final/system_tray.cpp final/main.cpp -o usb_hooks.exe -mwindows -std=c++17 -lsetupapi -lcomctl32
+g++ final/key_logger.cpp final/device_authenticator.cpp final/behavior_analyzer.cpp final/system_tray.cpp final/main.cpp -o usb_hooks.exe -mwindows -std=c++17 -lsetupapi -lcomctl32 -lcfgmgr32
 ```
 
 ## Project Structure
@@ -74,6 +82,7 @@ When a new USB keyboard device is connected, the application will:
 - Block devices after 5 failed authentication attempts (for 1 hour)
 - Remember trusted devices for future sessions
 - Allow manual trusting/untrusting of devices through the UI
+- Automatically eject untrusted devices for enhanced security
 
 ### Layer 2: Behavior Analysis
 Even after authentication, the application monitors for:
@@ -105,6 +114,7 @@ All keyboard events are logged with:
 - **"Permission denied"**: Ensure the application isn't running when recompiling
 - **Device not detected**: Verify you have administrative privileges
 - **UI not displaying**: Check that comctl32.lib is properly linked
+- **Device ejection fails**: Run the application with administrative privileges using StartApp.bat
 
 ## License
 This project is licensed under the [MIT License](LICENSE) - see the LICENSE file for details.
@@ -113,4 +123,5 @@ This project is licensed under the [MIT License](LICENSE) - see the LICENSE file
 - Windows API documentation
 - SetupAPI and Device Management API
 - Common Controls library
+- Configuration Manager API for device ejection functionality
 

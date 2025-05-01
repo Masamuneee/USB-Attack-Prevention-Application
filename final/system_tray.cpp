@@ -68,10 +68,6 @@ LRESULT CALLBACK SystemTray::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
                 case IDM_ABOUT:
                     tray.ShowAboutDialog();
                     return 0;
-                case IDM_EJECT_UNTRUSTED:
-                    DeviceAuthenticator::GetInstance().EjectUntrustedDevices();
-                    MessageBoxA(hwnd, "Untrusted USB devices have been ejected.", "Device Ejection", MB_OK | MB_ICONINFORMATION);
-                    return 0;
             }
             break;
         case WM_DESTROY:
@@ -184,9 +180,9 @@ void SystemTray::CreateTrayIcon()
     
     // Use safe string copy
     #ifdef _MSC_VER
-    strncpy_s(nid.szTip, sizeof(nid.szTip), "USB Device Monitor (v1.0.4)", sizeof(nid.szTip) - 1);
+    strncpy_s(nid.szTip, sizeof(nid.szTip), "USB Device Monitor (v1.0.5)", sizeof(nid.szTip) - 1);
     #else
-    strncpy(nid.szTip, "USB Device Monitor (v1.0.4)", sizeof(nid.szTip) - 1);
+    strncpy(nid.szTip, "USB Device Monitor (v1.0.5)", sizeof(nid.szTip) - 1);
     #endif
     nid.szTip[sizeof(nid.szTip) - 1] = '\0'; // Ensure null-termination
     
@@ -218,7 +214,6 @@ void SystemTray::ShowContextMenu()
     popupMenu = CreatePopupMenu();
     AppendMenu(popupMenu, MF_STRING, IDM_SHOW_DEVICES, "Manage USB Devices");
     AppendMenu(popupMenu, MF_STRING, IDM_SETTINGS, "Settings");
-    AppendMenu(popupMenu, MF_STRING, IDM_EJECT_UNTRUSTED, "Eject Untrusted Devices");  // New option
     AppendMenu(popupMenu, MF_STRING | (isLoggingEnabled ? MF_CHECKED : MF_UNCHECKED), IDM_TOGGLE_LOGGING, "Enable Logging");
     AppendMenu(popupMenu, MF_SEPARATOR, 0, nullptr);
     AppendMenu(popupMenu, MF_STRING, IDM_ABOUT, "About");
@@ -258,7 +253,7 @@ void SystemTray::ShowDeviceList()
         "STATIC",
         "USB Device Manager",
         WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE | WS_THICKFRAME,
-        100, 100, 750, 500,  // Larger size for better visibility
+        100, 100, 850, 550,  // Larger size for better visibility
         hwnd, nullptr, GetModuleHandle(nullptr), nullptr
     );
 
@@ -267,7 +262,7 @@ void SystemTray::ShowDeviceList()
         0, "STATIC", 
         "Connected USB devices - Use the buttons below to manage device trust status:",
         WS_CHILD | WS_VISIBLE | SS_LEFT,
-        15, 15, 720, 20,
+        15, 15, 820, 20,
         hDlg, nullptr, GetModuleHandle(nullptr), nullptr
     );
 
@@ -284,7 +279,7 @@ void SystemTray::ShowDeviceList()
         WS_EX_CLIENTEDGE, 
         WC_LISTVIEW, "",
         WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SINGLESEL | WS_BORDER | WS_TABSTOP,
-        15, 40, 720, 350,
+        15, 40, 820, 400,
         hDlg, (HMENU)IDC_DEVICE_LIST, GetModuleHandle(nullptr), nullptr
     );
 
@@ -293,28 +288,39 @@ void SystemTray::ShowDeviceList()
                 LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES, 
                 LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
     
-    // Add columns - using standard Windows API with improved widths
+    // Add columns with improved layout and more detailed information
     LV_COLUMN lvc = {0};
     lvc.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
+    
+    // Column 0: Device Name
     lvc.iSubItem = 0;
-    lvc.cx = 240;  // Wider for better readability
+    lvc.cx = 250;
     lvc.pszText = (LPSTR)"Device Name";
     ListView_InsertColumn(hListView, 0, &lvc);
     
+    // Column 1: Trust Status
     lvc.iSubItem = 1;
-    lvc.cx = 100;
+    lvc.cx = 90;
     lvc.pszText = (LPSTR)"Status";
     ListView_InsertColumn(hListView, 1, &lvc);
     
+    // Column 2: Ejected Status
     lvc.iSubItem = 2;
-    lvc.cx = 90;
+    lvc.cx = 70;
     lvc.pszText = (LPSTR)"Ejected";
     ListView_InsertColumn(hListView, 2, &lvc);
     
+    // Column 3: Last Authentication
     lvc.iSubItem = 3;
-    lvc.cx = 270;
-    lvc.pszText = (LPSTR)"Device ID";
+    lvc.cx = 150;
+    lvc.pszText = (LPSTR)"Last Authentication";
     ListView_InsertColumn(hListView, 3, &lvc);
+    
+    // Column 4: Device ID (shortened)
+    lvc.iSubItem = 4;
+    lvc.cx = 240;
+    lvc.pszText = (LPSTR)"Device ID";
+    ListView_InsertColumn(hListView, 4, &lvc);
 
     // Apply the font to the ListView
     if (hFont) {
@@ -345,25 +351,48 @@ void SystemTray::ShowDeviceList()
             displayName += " (" + std::to_string(nameCount + 1) + ")";
         }
 
-        // Device name
+        // Column 0: Device name
         lvi.iSubItem = 0;
         lvi.pszText = (LPSTR)displayName.c_str();
         ListView_InsertItem(hListView, &lvi);
 
-        // Status
+        // Column 1: Trust Status
         lvi.iSubItem = 1;
         std::string status = devices[i].authenticated ? "Trusted" : "Not Trusted";
         lvi.pszText = (LPSTR)status.c_str();
         ListView_SetItem(hListView, &lvi);
         
-        // Ejected status
+        // Column 2: Ejected status
         lvi.iSubItem = 2;
         std::string ejectedStatus = devices[i].isEjected ? "Yes" : "No";
         lvi.pszText = (LPSTR)ejectedStatus.c_str();
         ListView_SetItem(hListView, &lvi);
-
-        // Device ID - show a shortened version
+        
+        // Column 3: Last Authentication Time
         lvi.iSubItem = 3;
+        std::string authTime = "Never";
+        if (devices[i].lastAuthAttempt.time_since_epoch().count() > 0) {
+            std::time_t time_point = std::chrono::system_clock::to_time_t(devices[i].lastAuthAttempt);
+            std::tm tm_time = {};
+            
+            #ifdef _MSC_VER
+                localtime_s(&tm_time, &time_point);
+            #else
+                std::tm* temp_tm = localtime(&time_point);
+                if (temp_tm) {
+                    tm_time = *temp_tm;
+                }
+            #endif
+            
+            char timeBuf[32] = {0};
+            strftime(timeBuf, sizeof(timeBuf), "%Y-%m-%d %H:%M:%S", &tm_time);
+            authTime = timeBuf;
+        }
+        lvi.pszText = (LPSTR)authTime.c_str();
+        ListView_SetItem(hListView, &lvi);
+
+        // Column 4: Device ID - show a shortened version
+        lvi.iSubItem = 4;
         std::string shortId = devices[i].deviceId;
         if (shortId.length() > 40) {
             shortId = shortId.substr(0, 37) + "...";
@@ -387,35 +416,35 @@ void SystemTray::ShowDeviceList()
     HWND hBtnTrust = CreateWindow(
         "BUTTON", "Trust Device",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
-        15, 410, 120, 30,
+        15, 460, 120, 30,
         hDlg, (HMENU)IDM_TRUST_DEVICE, GetModuleHandle(nullptr), nullptr
     );
     
     HWND hBtnUntrust = CreateWindow(
-        "BUTTON", "Untrust Device",
+        "BUTTON", "Untrust && Eject",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
-        145, 410, 120, 30,
+        145, 460, 120, 30,
         hDlg, (HMENU)IDM_UNTRUST_DEVICE, GetModuleHandle(nullptr), nullptr
     );
 
     HWND hBtnEject = CreateWindow(
         "BUTTON", "Eject Device",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
-        275, 410, 120, 30,
+        275, 460, 120, 30,
         hDlg, (HMENU)IDM_EJECT_DEVICE, GetModuleHandle(nullptr), nullptr
     );
 
     HWND hBtnDetails = CreateWindow(
         "BUTTON", "View Details",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
-        405, 410, 120, 30,
+        405, 460, 120, 30,
         hDlg, (HMENU)IDM_DEVICE_DETAILS, GetModuleHandle(nullptr), nullptr
     );
     
     HWND hBtnClose = CreateWindow(
         "BUTTON", "Close",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
-        615, 410, 120, 30,
+        715, 460, 120, 30,
         hDlg, (HMENU)IDOK, GetModuleHandle(nullptr), nullptr
     );
     
@@ -486,11 +515,33 @@ void SystemTray::ShowDeviceList()
                             std::string deviceId = (*deviceListCopy)[selectedIndex].deviceId;
                             
                             if (LOWORD(wParam) == IDM_TRUST_DEVICE) {
-                                // Show confirmation with device details
+                                // Show confirmation with detailed device information
                                 std::string message = "Are you sure you want to trust this device?\n\n";
                                 message += "Device Name: " + (*deviceListCopy)[selectedIndex].friendlyName + "\n";
-                                message += "Device ID: " + deviceId + "\n\n";
-                                message += "Trusting this device allows it to send keystrokes to your system.";
+                                message += "Device ID: " + deviceId + "\n";
+                                
+                                // Add last authentication attempt time if available
+                                if ((*deviceListCopy)[selectedIndex].lastAuthAttempt.time_since_epoch().count() > 0) {
+                                    std::time_t authTime = std::chrono::system_clock::to_time_t(
+                                        (*deviceListCopy)[selectedIndex].lastAuthAttempt);
+                                    std::tm authTm = {};
+                                    
+                                    #ifdef _MSC_VER
+                                        localtime_s(&authTm, &authTime);
+                                    #else
+                                        std::tm* temp_tm = localtime(&authTime);
+                                        if (temp_tm) {
+                                            authTm = *temp_tm;
+                                        }
+                                    #endif
+                                    
+                                    char timeBuf[64] = {0};
+                                    strftime(timeBuf, sizeof(timeBuf), "%Y-%m-%d %H:%M:%S", &authTm);
+                                    
+                                    message += "Last Authentication: " + std::string(timeBuf) + "\n";
+                                }
+                                
+                                message += "\nTrusting this device allows it to send keystrokes to your system.";
                                 
                                 int result = MessageBoxA(hwnd, message.c_str(), "Trust Device?", 
                                                        MB_YESNO | MB_ICONQUESTION);
@@ -498,13 +549,10 @@ void SystemTray::ShowDeviceList()
                                 if (result == IDYES && auth.SetDeviceTrust(deviceId, true)) {
                                     // Update the status in the list
                                     (*deviceListCopy)[selectedIndex].authenticated = true;
-                                    // Update UI
-                                    LV_ITEM lvi = {0};
-                                    lvi.mask = LVIF_TEXT;
-                                    lvi.iItem = selectedIndex;
-                                    lvi.iSubItem = 1;
-                                    lvi.pszText = (LPSTR)"Trusted";
-                                    ListView_SetItem(hList, &lvi);
+                                    
+                                    // Update UI - refresh all columns with the latest data
+                                    RefreshDeviceList(hList, *deviceListCopy);
+                                    
                                     SetWindowTextA(GetDlgItem(hwnd, IDC_STATUS_BAR), 
                                                 "Device has been trusted successfully");
                                 } else if (result == IDYES) {
@@ -513,105 +561,99 @@ void SystemTray::ShowDeviceList()
                                 }
                             }
                             else if (LOWORD(wParam) == IDM_UNTRUST_DEVICE) {
-                                // Show confirmation with device details
-                                std::string message = "Are you sure you want to untrust this device?\n\n";
+                                // Show confirmation with detailed device information
+                                std::string message = "Are you sure you want to untrust and eject this device?\n\n";
                                 message += "Device Name: " + (*deviceListCopy)[selectedIndex].friendlyName + "\n";
-                                message += "Device ID: " + deviceId + "\n\n";
-                                message += "Untrusting this device will prevent it from sending keystrokes to your system.";
+                                message += "Device ID: " + deviceId + "\n";
                                 
-                                int result = MessageBoxA(hwnd, message.c_str(), "Untrust Device?", 
+                                // Add last authentication attempt time if available
+                                if ((*deviceListCopy)[selectedIndex].lastAuthAttempt.time_since_epoch().count() > 0) {
+                                    std::time_t authTime = std::chrono::system_clock::to_time_t(
+                                        (*deviceListCopy)[selectedIndex].lastAuthAttempt);
+                                    std::tm authTm = {};
+                                    
+                                    #ifdef _MSC_VER
+                                        localtime_s(&authTm, &authTime);
+                                    #else
+                                        std::tm* temp_tm = localtime(&authTime);
+                                        if (temp_tm) {
+                                            authTm = *temp_tm;
+                                        }
+                                    #endif
+                                    
+                                    char timeBuf[64] = {0};
+                                    strftime(timeBuf, sizeof(timeBuf), "%Y-%m-%d %H:%M:%S", &authTm);
+                                    
+                                    message += "Last Authentication: " + std::string(timeBuf) + "\n";
+                                }
+                                
+                                message += "\nUntrusting this device will prevent it from sending keystrokes to your system\n";
+                                message += "and the device will be ejected until manually restored.";
+                                
+                                int result = MessageBoxA(hwnd, message.c_str(), "Untrust & Eject Device?", 
                                                        MB_YESNO | MB_ICONQUESTION);
                                 
                                 if (result == IDYES && auth.UntrustDevice(deviceId)) {
                                     // Update the status in the list
                                     (*deviceListCopy)[selectedIndex].authenticated = false;
-                                    // Update UI
-                                    LV_ITEM lvi = {0};
-                                    lvi.mask = LVIF_TEXT;
-                                    lvi.iItem = selectedIndex;
-                                    lvi.iSubItem = 1;
-                                    lvi.pszText = (LPSTR)"Not Trusted";
-                                    ListView_SetItem(hList, &lvi);
+                                    (*deviceListCopy)[selectedIndex].isEjected = true; // Also mark as ejected
+                                    
+                                    // Update UI - refresh all columns with the latest data
+                                    RefreshDeviceList(hList, *deviceListCopy);
+                                    
                                     SetWindowTextA(GetDlgItem(hwnd, IDC_STATUS_BAR), 
-                                                "Device has been untrusted successfully");
+                                                "Device has been untrusted and ejected successfully");
                                 } else if (result == IDYES) {
                                     MessageBoxA(hwnd, "Failed to untrust device. The device may no longer be connected.", 
                                               "Untrust Failed", MB_OK | MB_ICONERROR);
                                 }
                             }
                             else if (LOWORD(wParam) == IDM_EJECT_DEVICE) {
-                                // Show confirmation
+                                // Show confirmation with detailed device information
                                 std::string message = "Are you sure you want to eject this device?\n\n";
                                 message += "Device Name: " + (*deviceListCopy)[selectedIndex].friendlyName + "\n";
-                                message += "Device ID: " + deviceId + "\n\n";
-                                message += "This will disable the device until the application is restarted or you manually restore it.";
+                                message += "Device ID: " + deviceId + "\n";
+                                
+                                // Add last authentication attempt time if available
+                                if ((*deviceListCopy)[selectedIndex].lastAuthAttempt.time_since_epoch().count() > 0) {
+                                    std::time_t authTime = std::chrono::system_clock::to_time_t(
+                                        (*deviceListCopy)[selectedIndex].lastAuthAttempt);
+                                    std::tm authTm = {};
+                                    
+                                    #ifdef _MSC_VER
+                                        localtime_s(&authTm, &authTime);
+                                    #else
+                                        std::tm* temp_tm = localtime(&authTime);
+                                        if (temp_tm) {
+                                            authTm = *temp_tm;
+                                        }
+                                    #endif
+                                    
+                                    char timeBuf[64] = {0};
+                                    strftime(timeBuf, sizeof(timeBuf), "%Y-%m-%d %H:%M:%S", &authTm);
+                                    
+                                    message += "Last Authentication: " + std::string(timeBuf) + "\n";
+                                }
+                                
+                                message += "\nThis will disable the device until the application is restarted or you manually restore it.";
                                 
                                 int result = MessageBoxA(hwnd, message.c_str(), "Eject Device?", 
                                                        MB_YESNO | MB_ICONQUESTION);
                                 
                                 if (result == IDYES) {
                                     if (auth.EjectDeviceById(deviceId)) {
-                                        // Update UI to show ejected status
+                                        // Update the status in the list
                                         (*deviceListCopy)[selectedIndex].isEjected = true;
                                         
-                                        // Refresh the entire list to show accurate information
-                                        ListView_DeleteAllItems(hList);
-                                        
-                                        // Refresh the list with current device information
-                                        std::vector<USBDeviceInfo> updatedDevices = auth.GetConnectedDevices();
-                                        
-                                        // Update our copy
-                                        *deviceListCopy = updatedDevices;
-                                        
-                                        // Repopulate the list
-                                        for (size_t i = 0; i < updatedDevices.size(); i++) {
-                                            LV_ITEM lvi = {0};
-                                            lvi.mask = LVIF_TEXT | LVIF_PARAM;
-                                            lvi.iItem = (int)i;
-                                            lvi.lParam = (LPARAM)i;
-                                            
-                                            // Device name
-                                            std::string displayName = updatedDevices[i].friendlyName;
-                                            lvi.iSubItem = 0;
-                                            lvi.pszText = (LPSTR)displayName.c_str();
-                                            ListView_InsertItem(hList, &lvi);
-                                            
-                                            // Status
-                                            lvi.iSubItem = 1;
-                                            std::string status = updatedDevices[i].authenticated ? "Trusted" : "Not Trusted";
-                                            lvi.pszText = (LPSTR)status.c_str();
-                                            ListView_SetItem(hList, &lvi);
-                                            
-                                            // Ejected status
-                                            lvi.iSubItem = 2;
-                                            std::string ejectedStatus = updatedDevices[i].isEjected ? "Yes" : "No";
-                                            lvi.pszText = (LPSTR)ejectedStatus.c_str();
-                                            ListView_SetItem(hList, &lvi);
-                                            
-                                            // Device ID
-                                            lvi.iSubItem = 3;
-                                            std::string shortId = updatedDevices[i].deviceId;
-                                            if (shortId.length() > 40) {
-                                                shortId = shortId.substr(0, 37) + "...";
-                                            }
-                                            lvi.pszText = (LPSTR)shortId.c_str();
-                                            ListView_SetItem(hList, &lvi);
-                                        }
-                                        
-                                        // Reselect the device if it's still in the list
-                                        for (size_t i = 0; i < updatedDevices.size(); i++) {
-                                            if (updatedDevices[i].deviceId == deviceId) {
-                                                ListView_SetItemState(hList, i, LVIS_SELECTED, LVIS_SELECTED);
-                                                break;
-                                            }
-                                        }
+                                        // Update UI - refresh all columns with the latest data
+                                        RefreshDeviceList(hList, *deviceListCopy);
                                         
                                         SetWindowTextA(GetDlgItem(hwnd, IDC_STATUS_BAR), 
                                                     "Device has been ejected successfully");
                                     } else {
                                         MessageBoxA(hwnd, 
                                                   "Failed to eject device. The operation might require administrator privileges.\n\n"
-                                                  "Try running the application as administrator, or the device might be protected by the system.",
+                                                  "Try running the application as administrator using run_as_admin.bat",
                                                   "Eject Failed", MB_OK | MB_ICONERROR);
                                     }
                                 }
@@ -667,10 +709,30 @@ void SystemTray::ShowDeviceList()
                                 if (selectedIndex >= 0 && selectedIndex < (int)deviceListCopy->size()) {
                                     const USBDeviceInfo& device = (*deviceListCopy)[selectedIndex];
                                     
-                                    // Format status bar text with more info
-                                    std::string statusText = "Selected: " + device.friendlyName + 
-                                                           " | Status: " + (device.authenticated ? "Trusted" : "Not Trusted") +
-                                                           " | Ejected: " + (device.isEjected ? "Yes" : "No");
+                                    // Format detailed status bar text
+                                    std::string statusText = "Selected: " + device.friendlyName;
+                                    statusText += " | Status: " + std::string(device.authenticated ? "Trusted" : "Not Trusted");
+                                    statusText += " | Ejected: " + std::string(device.isEjected ? "Yes" : "No");
+                                    
+                                    // Add last auth time if available
+                                    if (device.lastAuthAttempt.time_since_epoch().count() > 0) {
+                                        std::time_t authTime = std::chrono::system_clock::to_time_t(device.lastAuthAttempt);
+                                        std::tm authTm = {};
+                                        
+                                        #ifdef _MSC_VER
+                                            localtime_s(&authTm, &authTime);
+                                        #else
+                                            std::tm* temp_tm = localtime(&authTime);
+                                            if (temp_tm) {
+                                                authTm = *temp_tm;
+                                            }
+                                        #endif
+                                        
+                                        char timeBuf[64] = {0};
+                                        strftime(timeBuf, sizeof(timeBuf), "%Y-%m-%d %H:%M:%S", &authTm);
+                                        statusText += " | Last Auth: " + std::string(timeBuf);
+                                    }
+                                    
                                     SetWindowTextA(GetDlgItem(hwnd, IDC_STATUS_BAR), statusText.c_str());
                                 }
                             }
@@ -700,7 +762,83 @@ void SystemTray::ShowDeviceList()
             
             return DefWindowProc(hwnd, msg, wParam, lParam);
         }
+        
+        // Helper method to refresh the device list with updated information
+        static void RefreshDeviceList(HWND hListView, const std::vector<USBDeviceInfo>& devices) {
+            // Preserve the selected item
+            int selectedIndex = ListView_GetNextItem(hListView, -1, LVNI_SELECTED);
+            
+            // Clear the list
+            ListView_DeleteAllItems(hListView);
+            
+            // Repopulate with updated data
+            for (size_t i = 0; i < devices.size(); i++) {
+                LV_ITEM lvi = {0};
+                lvi.mask = LVIF_TEXT | LVIF_PARAM;
+                lvi.iItem = (int)i;
+                lvi.lParam = (LPARAM)i;
+                
+                // Column 0: Device name
+                std::string displayName = devices[i].friendlyName;
+                if (displayName.empty()) {
+                    displayName = "Unknown Device";
+                }
+                lvi.iSubItem = 0;
+                lvi.pszText = (LPSTR)displayName.c_str();
+                ListView_InsertItem(hListView, &lvi);
+                
+                // Column 1: Trust Status
+                lvi.iSubItem = 1;
+                std::string status = devices[i].authenticated ? "Trusted" : "Not Trusted";
+                lvi.pszText = (LPSTR)status.c_str();
+                ListView_SetItem(hListView, &lvi);
+                
+                // Column 2: Ejected status
+                lvi.iSubItem = 2;
+                std::string ejectedStatus = devices[i].isEjected ? "Yes" : "No";
+                lvi.pszText = (LPSTR)ejectedStatus.c_str();
+                ListView_SetItem(hListView, &lvi);
+                
+                // Column 3: Last Authentication Time
+                lvi.iSubItem = 3;
+                std::string authTime = "Never";
+                if (devices[i].lastAuthAttempt.time_since_epoch().count() > 0) {
+                    std::time_t time_point = std::chrono::system_clock::to_time_t(devices[i].lastAuthAttempt);
+                    std::tm tm_time = {};
+                    
+                    #ifdef _MSC_VER
+                        localtime_s(&tm_time, &time_point);
+                    #else
+                        std::tm* temp_tm = localtime(&time_point);
+                        if (temp_tm) {
+                            tm_time = *temp_tm;
+                        }
+                    #endif
+                    
+                    char timeBuf[32] = {0};
+                    strftime(timeBuf, sizeof(timeBuf), "%Y-%m-%d %H:%M:%S", &tm_time);
+                    authTime = timeBuf;
+                }
+                lvi.pszText = (LPSTR)authTime.c_str();
+                ListView_SetItem(hListView, &lvi);
+                
+                // Column 4: Device ID
+                lvi.iSubItem = 4;
+                std::string shortId = devices[i].deviceId;
+                if (shortId.length() > 40) {
+                    shortId = shortId.substr(0, 37) + "...";
+                }
+                lvi.pszText = (LPSTR)shortId.c_str();
+                ListView_SetItem(hListView, &lvi);
+            }
+            
+            // Restore selection if possible
+            if (selectedIndex >= 0 && selectedIndex < (int)devices.size()) {
+                ListView_SetItemState(hListView, selectedIndex, LVIS_SELECTED | LVIS_FOCUSED, LVIS_SELECTED | LVIS_FOCUSED);
+            }
+        }
     };
+    
     // Set the window procedure using the static method
     SetWindowLongPtr(hDlg, GWLP_WNDPROC, (LONG_PTR)DialogProcHelper::DeviceListProc);
     
@@ -969,7 +1107,7 @@ void SystemTray::ShowAboutDialog()
     MessageBoxA(
         hwnd,
         "USB Attack Prevention Application\n"
-        "Version 1.0.4\n\n"
+        "Version 1.0.5\n\n"
         "A comprehensive security solution for protecting against malicious USB devices.\n\n"
         "Authors: Masamune (Minh Pham) / Lio (Thai Do)",
         "About USB Monitor",
