@@ -555,3 +555,393 @@ void DeviceAuthenticator::NotifyListeners(AuthEvent event, const std::string& de
         listener->OnAuthEvent(event, deviceId);
     }
 }
+
+// Implementation of device ejection function
+bool DeviceAuthenticator::EjectDevice(const std::string& deviceId)
+{
+    // Log the ejection attempt
+    std::cerr << "Attempting to eject device: " << deviceId << std::endl;
+    
+    std::string instanceId = GetDeviceInstanceIdFromPath(deviceId);
+    if (instanceId.empty()) {
+        std::cerr << "Failed to get instance ID for device: " << deviceId << std::endl;
+        return false;
+    }
+    
+    std::cerr << "Using instance ID: " << instanceId << std::endl;
+    
+    // First try the CM_* API approach which sometimes works without admin privileges
+    DEVINST devInst = 0;
+    CONFIGRET status;
+    
+    // Create a non-const copy of the string (required by the API)
+    char* deviceIdCopy = _strdup(instanceId.c_str());
+    if (!deviceIdCopy) {
+        std::cerr << "Failed to allocate memory for device ID" << std::endl;
+        return false;
+    }
+    
+    // Use the ANSI version of the API functions explicitly with non-const parameter
+    status = CM_Locate_DevNodeA(&devInst, deviceIdCopy, CM_LOCATE_DEVNODE_NORMAL);
+    free(deviceIdCopy); // Free the copy after use
+    
+    if (status != CR_SUCCESS) {
+        std::cerr << "CM_Locate_DevNodeA failed with error: " << status << " (0x" << std::hex << status << ")" << std::endl;
+        
+        // Try another approach - locate a partial match
+        char buffer[MAX_DEVICE_ID_LEN] = {0};
+        ULONG bufferSize = MAX_DEVICE_ID_LEN;
+        
+        status = CM_Get_Device_ID_ListA(nullptr, buffer, bufferSize, CM_GETIDLIST_FILTER_NONE);
+        if (status == CR_SUCCESS) {
+            char* currentId = buffer;
+            while (*currentId) {
+                // Check if this ID contains our instance ID as a substring
+                if (strstr(currentId, instanceId.c_str())) {
+                    // Found a potential match
+                    std::cerr << "Found potential match device ID: " << currentId << std::endl;
+                    
+                    // Make a non-const copy of the current ID
+                    char* currentIdCopy = _strdup(currentId);
+                    if (currentIdCopy) {
+                        status = CM_Locate_DevNodeA(&devInst, currentIdCopy, CM_LOCATE_DEVNODE_NORMAL);
+                        free(currentIdCopy);
+                        if (status == CR_SUCCESS) {
+                            std::cerr << "Successfully located device node" << std::endl;
+                            break;
+                        }
+                    }
+                }
+                // Move to next ID string
+                currentId += strlen(currentId) + 1;
+            }
+        }
+        
+        if (status != CR_SUCCESS) {
+            std::cerr << "Failed to locate any device instance: " << status << std::endl;
+            // Don't return yet, try the SetupDi approach
+        }
+    }
+    
+    bool ejectionSucceeded = false;
+    
+    // If we successfully located the device node, try to disable it
+    if (status == CR_SUCCESS) {
+        // Try to disable the device - use constant value directly (0x0001 = CM_DISABLE_TEMPORARY)
+        status = CM_Disable_DevNode(devInst, 0x0001);
+        if (status == CR_SUCCESS) {
+            std::cerr << "Device disabled successfully using CM_Disable_DevNode" << std::endl;
+            ejectionSucceeded = true;
+        } else {
+            std::cerr << "CM_Disable_DevNode failed with error: " << status << " (0x" << std::hex << status << ")" << std::endl;
+            
+            // As a fallback, try changing the config flags
+            ULONG flags = 0;
+            ULONG bufferSize = sizeof(flags);
+            if (CM_Get_DevNode_Registry_PropertyA(devInst, CM_DRP_CONFIGFLAGS, nullptr, &flags, &bufferSize, 0) == CR_SUCCESS) {
+                // DNF_DISABLED (0x00000001) flag
+                flags |= 0x00000001;
+                status = CM_Set_DevNode_Registry_PropertyA(devInst, CM_DRP_CONFIGFLAGS, &flags, sizeof(flags), 0);
+                if (status == CR_SUCCESS) {
+                    std::cerr << "Device disabled successfully using CM_DRP_CONFIGFLAGS" << std::endl;
+                    ejectionSucceeded = true;
+                } else {
+                    std::cerr << "Failed to set CONFIGFLAGS to disable device: " << status << std::endl;
+                }
+            }
+        }
+    }
+    
+    // If CM_* methods failed, try SetupDi methods which may work better with admin privileges
+    if (!ejectionSucceeded) {
+        std::cerr << "Trying SetupDi methods to disable device..." << std::endl;
+        
+        // Get device info set containing all devices
+        HDEVINFO deviceInfoSet = SetupDiGetClassDevs(
+            nullptr,
+            nullptr,
+            nullptr,
+            DIGCF_ALLCLASSES | DIGCF_PRESENT
+        );
+        
+        if (deviceInfoSet != INVALID_HANDLE_VALUE) {
+            SP_DEVINFO_DATA deviceInfoData = {0};
+            deviceInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
+            
+            // Find our device by instance ID
+            bool found = false;
+            for (DWORD i = 0; SetupDiEnumDeviceInfo(deviceInfoSet, i, &deviceInfoData); i++) {
+                char buffer[MAX_PATH] = {0};
+                if (SetupDiGetDeviceInstanceIdA(deviceInfoSet, &deviceInfoData, buffer, sizeof(buffer), nullptr)) {
+                    std::cerr << "Checking device: " << buffer << std::endl;
+                    
+                    // Try exact match and partial match
+                    if (_stricmp(buffer, instanceId.c_str()) == 0 || 
+                        strstr(buffer, instanceId.c_str()) != nullptr ||
+                        strstr(instanceId.c_str(), buffer) != nullptr) {
+                        
+                        found = true;
+                        std::cerr << "Found matching device in SetupDi enumeration" << std::endl;
+                        
+                        // Try to disable the device
+                        SP_PROPCHANGE_PARAMS params = {0};
+                        params.ClassInstallHeader.cbSize = sizeof(SP_CLASSINSTALL_HEADER);
+                        params.ClassInstallHeader.InstallFunction = DIF_PROPERTYCHANGE;
+                        params.StateChange = DICS_DISABLE;   // Request to disable
+                        params.Scope = DICS_FLAG_GLOBAL;     // Apply to all hardware profiles
+                        params.HwProfile = 0;               // Current hardware profile
+                        
+                        if (SetupDiSetClassInstallParams(deviceInfoSet, &deviceInfoData, 
+                                                       &params.ClassInstallHeader, sizeof(params)) &&
+                            SetupDiCallClassInstaller(DIF_PROPERTYCHANGE, deviceInfoSet, &deviceInfoData)) {
+                            
+                            std::cerr << "Device disabled successfully using SetupDi functions" << std::endl;
+                            ejectionSucceeded = true;
+                        } else {
+                            DWORD error = GetLastError();
+                            std::cerr << "SetupDi disable failed with error: " << error << " (0x" << std::hex << error << ")" << std::endl;
+                        }
+                        break;
+                    }
+                }
+            }
+            
+            if (!found) {
+                std::cerr << "Device not found in SetupDi enumeration" << std::endl;
+            }
+            
+            SetupDiDestroyDeviceInfoList(deviceInfoSet);
+        } else {
+            DWORD error = GetLastError();
+            std::cerr << "SetupDiGetClassDevs failed with error: " << error << std::endl;
+        }
+    }
+    
+    // If the ejection succeeded, update our tracking data
+    if (ejectionSucceeded) {
+        // Mark device as ejected in our tracking
+        ejectedDevices.insert(deviceId);
+        
+        // Update device info
+        if (knownDevices.find(deviceId) != knownDevices.end()) {
+            knownDevices[deviceId].isEjected = true;
+        }
+        
+        return true;
+    }
+    
+    std::cerr << "All device ejection methods failed" << std::endl;
+    return false;
+}
+
+// Method to get device instance ID from path
+std::string DeviceAuthenticator::GetDeviceInstanceIdFromPath(const std::string& devicePath)
+{
+    // Path usually has a format like \\?\HID#VID_046D&PID_C52B#6&38c58f05&0&0000#{884b96c3-56ef-11d1-bc8c-00a0c91405dd}
+    // We want to extract the part before the #{GUID} at the end
+    
+    std::string path = devicePath;
+    size_t guidPos = path.find("#{");
+    if (guidPos != std::string::npos) {
+        path = path.substr(0, guidPos);
+    }
+    
+    // Replace # with \ which is how Windows internally represents the ID
+    std::string instanceId = path;
+    size_t start = instanceId.find("\\\\?\\");
+    if (start != std::string::npos) {
+        instanceId = instanceId.substr(start + 4); // Skip the \\?\ prefix
+    }
+    
+    // Replace # with \ for internal Windows ID format
+    for (size_t i = 0; i < instanceId.length(); i++) {
+        if (instanceId[i] == '#') {
+            instanceId[i] = '\\';
+        }
+    }
+    
+    return instanceId;
+}
+
+// Eject all untrusted devices
+void DeviceAuthenticator::EjectUntrustedDevices()
+{
+    std::cerr << "Ejecting all untrusted devices..." << std::endl;
+    
+    int ejectedCount = 0;
+    for (const auto& pair : knownDevices) {
+        const std::string& deviceId = pair.first;
+        const USBDeviceInfo& deviceInfo = pair.second;
+        
+        if (!deviceInfo.authenticated && !deviceInfo.isEjected) {
+            std::cerr << "Ejecting untrusted device: " << deviceInfo.friendlyName << std::endl;
+            if (EjectDevice(deviceId)) {
+                ejectedCount++;
+            }
+        }
+    }
+    
+    std::cerr << "Ejected " << ejectedCount << " untrusted devices" << std::endl;
+}
+
+// Eject all devices except the specified one
+void DeviceAuthenticator::EjectAllExcept(const std::string& deviceId)
+{
+    std::cerr << "Ejecting all devices except: " << deviceId << std::endl;
+    
+    int ejectedCount = 0;
+    for (const auto& pair : knownDevices) {
+        const std::string& currentDeviceId = pair.first;
+        const USBDeviceInfo& deviceInfo = pair.second;
+        
+        if (currentDeviceId != deviceId && !deviceInfo.isEjected) {
+            std::cerr << "Ejecting device: " << deviceInfo.friendlyName << std::endl;
+            if (EjectDevice(currentDeviceId)) {
+                ejectedCount++;
+            }
+        }
+    }
+    
+    std::cerr << "Ejected " << ejectedCount << " devices" << std::endl;
+}
+
+// Restore a previously ejected device
+bool DeviceAuthenticator::RestoreDevice(const std::string& deviceId)
+{
+    if (ejectedDevices.find(deviceId) == ejectedDevices.end()) {
+        std::cerr << "Device is not marked as ejected: " << deviceId << std::endl;
+        return false;
+    }
+    
+    std::cerr << "Attempting to restore device: " << deviceId << std::endl;
+    
+    std::string instanceId = GetDeviceInstanceIdFromPath(deviceId);
+    if (instanceId.empty()) {
+        std::cerr << "Failed to get instance ID for device: " << deviceId << std::endl;
+        return false;
+    }
+    
+    DEVINST devInst = 0;
+    CONFIGRET status;
+    
+    // Create a non-const copy of the string (required by the API)
+    char* deviceIdCopy = _strdup(instanceId.c_str());
+    if (!deviceIdCopy) {
+        std::cerr << "Failed to allocate memory for device ID" << std::endl;
+        return false;
+    }
+    
+    status = CM_Locate_DevNodeA(&devInst, deviceIdCopy, CM_LOCATE_DEVNODE_NORMAL);
+    free(deviceIdCopy);
+    
+    bool restorationSucceeded = false;
+    
+    if (status == CR_SUCCESS) {
+        // Enable the device
+        status = CM_Enable_DevNode(devInst, 0);
+        if (status == CR_SUCCESS) {
+            std::cerr << "Device restored successfully using CM_Enable_DevNode" << std::endl;
+            restorationSucceeded = true;
+        } else {
+            std::cerr << "CM_Enable_DevNode failed with error: " << status << std::endl;
+        }
+    } else {
+        std::cerr << "CM_Locate_DevNodeA failed with error: " << status << std::endl;
+    }
+    
+    // Try SetupDi methods as a fallback
+    if (!restorationSucceeded) {
+        HDEVINFO deviceInfoSet = SetupDiGetClassDevs(
+            nullptr,
+            nullptr,
+            nullptr,
+            DIGCF_ALLCLASSES
+        );
+        
+        if (deviceInfoSet != INVALID_HANDLE_VALUE) {
+            SP_DEVINFO_DATA deviceInfoData = {0};
+            deviceInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
+            
+            bool found = false;
+            for (DWORD i = 0; SetupDiEnumDeviceInfo(deviceInfoSet, i, &deviceInfoData); i++) {
+                char buffer[MAX_PATH] = {0};
+                if (SetupDiGetDeviceInstanceIdA(deviceInfoSet, &deviceInfoData, buffer, sizeof(buffer), nullptr)) {
+                    if (_stricmp(buffer, instanceId.c_str()) == 0 || 
+                        strstr(buffer, instanceId.c_str()) != nullptr ||
+                        strstr(instanceId.c_str(), buffer) != nullptr) {
+                        
+                        found = true;
+                        
+                        // Enable the device
+                        SP_PROPCHANGE_PARAMS params = {0};
+                        params.ClassInstallHeader.cbSize = sizeof(SP_CLASSINSTALL_HEADER);
+                        params.ClassInstallHeader.InstallFunction = DIF_PROPERTYCHANGE;
+                        params.StateChange = DICS_ENABLE;    // Request to enable
+                        params.Scope = DICS_FLAG_GLOBAL;     // Apply to all hardware profiles
+                        params.HwProfile = 0;               // Current hardware profile
+                        
+                        if (SetupDiSetClassInstallParams(deviceInfoSet, &deviceInfoData, 
+                                                       &params.ClassInstallHeader, sizeof(params)) &&
+                            SetupDiCallClassInstaller(DIF_PROPERTYCHANGE, deviceInfoSet, &deviceInfoData)) {
+                            
+                            std::cerr << "Device enabled successfully using SetupDi functions" << std::endl;
+                            restorationSucceeded = true;
+                        } else {
+                            DWORD error = GetLastError();
+                            std::cerr << "SetupDi enable failed with error: " << error << std::endl;
+                        }
+                        break;
+                    }
+                }
+            }
+            
+            if (!found) {
+                std::cerr << "Device not found in SetupDi enumeration" << std::endl;
+            }
+            
+            SetupDiDestroyDeviceInfoList(deviceInfoSet);
+        }
+    }
+    
+    // Update our tracking data
+    if (restorationSucceeded) {
+        ejectedDevices.erase(deviceId);
+        
+        if (knownDevices.find(deviceId) != knownDevices.end()) {
+            knownDevices[deviceId].isEjected = false;
+        }
+        
+        return true;
+    }
+    
+    std::cerr << "Failed to restore device" << std::endl;
+    return false;
+}
+
+// Restore all previously ejected devices
+void DeviceAuthenticator::RestoreAllEjectedDevices()
+{
+    std::cerr << "Restoring all ejected devices..." << std::endl;
+    
+    // Make a copy to avoid iterator invalidation during modification
+    std::set<std::string> devicesCopy = ejectedDevices;
+    
+    int restoredCount = 0;
+    for (const auto& deviceId : devicesCopy) {
+        if (RestoreDevice(deviceId)) {
+            restoredCount++;
+        }
+    }
+    
+    std::cerr << "Restored " << restoredCount << " ejected devices" << std::endl;
+}
+
+// Get the device instance ID from SetupAPI
+std::string DeviceAuthenticator::GetDeviceInstanceId(HDEVINFO deviceInfoSet, PSP_DEVINFO_DATA deviceInfoData)
+{
+    char buffer[MAX_PATH] = {0};
+    if (SetupDiGetDeviceInstanceIdA(deviceInfoSet, deviceInfoData, buffer, sizeof(buffer), nullptr)) {
+        return std::string(buffer);
+    }
+    return "";
+}

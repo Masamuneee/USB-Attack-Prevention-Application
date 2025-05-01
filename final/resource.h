@@ -16,6 +16,8 @@
 #define IDM_TRUST_DEVICE      106
 #define IDM_UNTRUST_DEVICE    107
 #define IDM_DEVICE_DETAILS    108
+#define IDM_EJECT_UNTRUSTED   109  // New menu ID for ejecting untrusted devices
+#define IDM_EJECT_DEVICE      110  // New menu ID for ejecting a specific device
 
 // Control IDs
 #define IDC_DEVICE_LIST       201
