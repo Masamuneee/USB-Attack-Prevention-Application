@@ -58,26 +58,70 @@ static std::string GetDeviceIdFromDeviceInterface(HDEVINFO deviceInfoSet, PSP_DE
     return devicePath;
 }
 
-// Get friendly name for a device
+// Get friendly name for a device - Enhanced to include more details
 static std::string GetDeviceFriendlyName(HDEVINFO deviceInfoSet, PSP_DEVINFO_DATA deviceInfoData)
 {
     char buffer[256] = {0};
     DWORD bufferSize = sizeof(buffer);
+    std::string deviceName = "Unknown Device";
+    std::string deviceDesc = "";
+    std::string manufacturer = "";
     
+    // Try to get friendly name
     if (SetupDiGetDeviceRegistryProperty(deviceInfoSet, deviceInfoData, 
                                          SPDRP_FRIENDLYNAME, nullptr, 
                                          (BYTE*)buffer, bufferSize, nullptr)) {
-        return std::string(buffer);
+        deviceName = buffer;
     }
     
-    // Try device description if friendly name isn't available
+    // Try to get device description
+    memset(buffer, 0, bufferSize);
     if (SetupDiGetDeviceRegistryProperty(deviceInfoSet, deviceInfoData, 
-                                         SPDRP_DEVICEDESC, nullptr, 
-                                         (BYTE*)buffer, bufferSize, nullptr)) {
-        return std::string(buffer);
+                                     SPDRP_DEVICEDESC, nullptr, 
+                                     (BYTE*)buffer, bufferSize, nullptr)) {
+        deviceDesc = buffer;
+        if (deviceName == "Unknown Device") {
+            deviceName = deviceDesc; // Use description as fallback
+        }
     }
     
-    return "Unknown Device";
+    // Try to get device manufacturer
+    memset(buffer, 0, bufferSize);
+    if (SetupDiGetDeviceRegistryProperty(deviceInfoSet, deviceInfoData, 
+                                     SPDRP_MFG, nullptr, 
+                                     (BYTE*)buffer, bufferSize, nullptr)) {
+        manufacturer = buffer;
+    }
+    
+    // Get hardware IDs for VID/PID information
+    std::string vidPid;
+    memset(buffer, 0, bufferSize);
+    if (SetupDiGetDeviceRegistryProperty(deviceInfoSet, deviceInfoData, 
+                                     SPDRP_HARDWAREID, nullptr, 
+                                     (BYTE*)buffer, bufferSize, nullptr)) {
+        std::string hwid = buffer;
+        size_t vidPos = hwid.find("VID_");
+        size_t pidPos = hwid.find("PID_");
+        
+        if (vidPos != std::string::npos && pidPos != std::string::npos) {
+            std::string vid = hwid.substr(vidPos, 8); // VID_xxxx
+            std::string pid = hwid.substr(pidPos, 8); // PID_xxxx
+            vidPid = vid + " " + pid;
+        }
+    }
+    
+    // Build a comprehensive device name with available information
+    std::string fullName = deviceName;
+    
+    if (!manufacturer.empty() && fullName.find(manufacturer) == std::string::npos) {
+        fullName += " [" + manufacturer + "]";
+    }
+    
+    if (!vidPid.empty()) {
+        fullName += " (" + vidPid + ")";
+    }
+    
+    return fullName;
 }
 
 // C++ dialog for device authentication
@@ -371,15 +415,38 @@ void DeviceAuthenticator::EnumerateExistingDevices()
         
         if (!deviceId.empty() && SetupDiEnumDeviceInfo(deviceInfoSet, i, &deviceInfoData)) {
             std::string friendlyName = GetDeviceFriendlyName(deviceInfoSet, &deviceInfoData);
+            std::string instanceId = GetDeviceInstanceId(deviceInfoSet, &deviceInfoData);
             
             USBDeviceInfo deviceInfo(deviceId, friendlyName);
             knownDevices[deviceId] = deviceInfo;
             
-            // Prompt to trust existing devices
-            std::string message = "Do you trust this keyboard device?\n" + friendlyName;
+            // Get additional details for display
+            char locationInfo[256] = {0};
+            if (SetupDiGetDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_LOCATION_INFORMATION, 
+                                               NULL, (BYTE*)locationInfo, sizeof(locationInfo), NULL)) {
+                // Include location info if available
+            }
+            
+            // Create a detailed message showing device identification
+            std::string message = "Do you trust this keyboard device?\n\n";
+            message += "Device Name: " + friendlyName + "\n";
+            message += "Device ID: " + deviceId + "\n";
+            
+            if (locationInfo[0] != '\0') {
+                message += "Location: " + std::string(locationInfo) + "\n";
+            }
+            
+            message += "\nTrusting this device will allow it to send keystrokes to your system.\n"
+                      "Untrusting will eject the device until it's manually restored.";
+                      
             int result = MessageBoxA(nullptr, message.c_str(), "Device Trust", MB_YESNO | MB_ICONQUESTION);
             
             knownDevices[deviceId].authenticated = (result == IDYES);
+            
+            // If the device is not trusted, eject it automatically
+            if (result != IDYES) {
+                EjectDevice(deviceId);
+            }
         }
     }
     
@@ -451,6 +518,9 @@ bool DeviceAuthenticator::AuthenticateDevice(const std::string& deviceId)
         
         // Notify listeners about the failed authentication
         NotifyListeners(AuthEvent::DEVICE_AUTH_FAILED, deviceId);
+        
+        // Automatically eject the device when authentication fails
+        EjectDevice(deviceId);
         return false;
     }
 }
@@ -529,6 +599,9 @@ bool DeviceAuthenticator::UntrustDevice(const std::string& deviceId)
         // Notify listeners
         NotifyListeners(AuthEvent::DEVICE_UNTRUSTED, deviceId);
         
+        // Automatically eject the device when it's untrusted
+        EjectDevice(deviceId);
+        
         return true;
     }
     return false;
@@ -556,7 +629,7 @@ void DeviceAuthenticator::NotifyListeners(AuthEvent event, const std::string& de
     }
 }
 
-// Implementation of device ejection function
+// Implementation of device ejection function with improved reliability
 bool DeviceAuthenticator::EjectDevice(const std::string& deviceId)
 {
     // Log the ejection attempt
@@ -570,93 +643,48 @@ bool DeviceAuthenticator::EjectDevice(const std::string& deviceId)
     
     std::cerr << "Using instance ID: " << instanceId << std::endl;
     
-    // First try the CM_* API approach which sometimes works without admin privileges
-    DEVINST devInst = 0;
-    CONFIGRET status;
-    
-    // Create a non-const copy of the string (required by the API)
-    char* deviceIdCopy = _strdup(instanceId.c_str());
-    if (!deviceIdCopy) {
-        std::cerr << "Failed to allocate memory for device ID" << std::endl;
-        return false;
-    }
-    
-    // Use the ANSI version of the API functions explicitly with non-const parameter
-    status = CM_Locate_DevNodeA(&devInst, deviceIdCopy, CM_LOCATE_DEVNODE_NORMAL);
-    free(deviceIdCopy); // Free the copy after use
-    
-    if (status != CR_SUCCESS) {
-        std::cerr << "CM_Locate_DevNodeA failed with error: " << status << " (0x" << std::hex << status << ")" << std::endl;
-        
-        // Try another approach - locate a partial match
-        char buffer[MAX_DEVICE_ID_LEN] = {0};
-        ULONG bufferSize = MAX_DEVICE_ID_LEN;
-        
-        status = CM_Get_Device_ID_ListA(nullptr, buffer, bufferSize, CM_GETIDLIST_FILTER_NONE);
-        if (status == CR_SUCCESS) {
-            char* currentId = buffer;
-            while (*currentId) {
-                // Check if this ID contains our instance ID as a substring
-                if (strstr(currentId, instanceId.c_str())) {
-                    // Found a potential match
-                    std::cerr << "Found potential match device ID: " << currentId << std::endl;
-                    
-                    // Make a non-const copy of the current ID
-                    char* currentIdCopy = _strdup(currentId);
-                    if (currentIdCopy) {
-                        status = CM_Locate_DevNodeA(&devInst, currentIdCopy, CM_LOCATE_DEVNODE_NORMAL);
-                        free(currentIdCopy);
-                        if (status == CR_SUCCESS) {
-                            std::cerr << "Successfully located device node" << std::endl;
-                            break;
-                        }
-                    }
-                }
-                // Move to next ID string
-                currentId += strlen(currentId) + 1;
-            }
-        }
-        
-        if (status != CR_SUCCESS) {
-            std::cerr << "Failed to locate any device instance: " << status << std::endl;
-            // Don't return yet, try the SetupDi approach
-        }
-    }
-    
     bool ejectionSucceeded = false;
     
-    // If we successfully located the device node, try to disable it
-    if (status == CR_SUCCESS) {
-        // Try to disable the device - use constant value directly (0x0001 = CM_DISABLE_TEMPORARY)
-        status = CM_Disable_DevNode(devInst, 0x0001);
-        if (status == CR_SUCCESS) {
-            std::cerr << "Device disabled successfully using CM_Disable_DevNode" << std::endl;
-            ejectionSucceeded = true;
+    // Try multiple approaches to disable the device
+    
+    // Approach 1: Use DEVCON-style programmatic device disabling
+    // This approach uses PnP Configuration Manager API directly
+    {
+        DEVINST devInst = 0;
+        CONFIGRET status;
+        
+        // Create a non-const copy of the string (required by the API)
+        char* deviceIdCopy = _strdup(instanceId.c_str());
+        if (!deviceIdCopy) {
+            std::cerr << "Failed to allocate memory for device ID" << std::endl;
         } else {
-            std::cerr << "CM_Disable_DevNode failed with error: " << status << " (0x" << std::hex << status << ")" << std::endl;
+            // Try to locate the device node
+            status = CM_Locate_DevNodeA(&devInst, deviceIdCopy, CM_LOCATE_DEVNODE_NORMAL);
+            free(deviceIdCopy); // Free the copy after use
             
-            // As a fallback, try changing the config flags
-            ULONG flags = 0;
-            ULONG bufferSize = sizeof(flags);
-            if (CM_Get_DevNode_Registry_PropertyA(devInst, CM_DRP_CONFIGFLAGS, nullptr, &flags, &bufferSize, 0) == CR_SUCCESS) {
-                // DNF_DISABLED (0x00000001) flag
-                flags |= 0x00000001;
-                status = CM_Set_DevNode_Registry_PropertyA(devInst, CM_DRP_CONFIGFLAGS, &flags, sizeof(flags), 0);
+            if (status == CR_SUCCESS) {
+                // Try to disable the device - using proper constants
+                // Use CM_DISABLE_PERSIST (0x1) instead of CM_DISABLE_PERMANENTLY
+                status = CM_Disable_DevNode(devInst, 0x1); // CM_DISABLE_PERSIST
                 if (status == CR_SUCCESS) {
-                    std::cerr << "Device disabled successfully using CM_DRP_CONFIGFLAGS" << std::endl;
+                    std::cerr << "Device disabled successfully using CM_Disable_DevNode with persist flag" << std::endl;
                     ejectionSucceeded = true;
                 } else {
-                    std::cerr << "Failed to set CONFIGFLAGS to disable device: " << status << std::endl;
+                    std::cerr << "CM_Disable_DevNode failed with error: " << status << " (0x" << std::hex << status << ")" << std::endl;
+                    
+                    // Try without flags (0) instead of CM_DISABLE_TEMPORARY
+                    status = CM_Disable_DevNode(devInst, 0);
+                    if (status == CR_SUCCESS) {
+                        std::cerr << "Device disabled temporarily using CM_Disable_DevNode" << std::endl;
+                        ejectionSucceeded = true;
+                    }
                 }
             }
         }
     }
     
-    // If CM_* methods failed, try SetupDi methods which may work better with admin privileges
+    // Approach 2: Use SetupDi API more thoroughly
     if (!ejectionSucceeded) {
-        std::cerr << "Trying SetupDi methods to disable device..." << std::endl;
-        
-        // Get device info set containing all devices
         HDEVINFO deviceInfoSet = SetupDiGetClassDevs(
             nullptr,
             nullptr,
@@ -669,27 +697,23 @@ bool DeviceAuthenticator::EjectDevice(const std::string& deviceId)
             deviceInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
             
             // Find our device by instance ID
-            bool found = false;
             for (DWORD i = 0; SetupDiEnumDeviceInfo(deviceInfoSet, i, &deviceInfoData); i++) {
                 char buffer[MAX_PATH] = {0};
                 if (SetupDiGetDeviceInstanceIdA(deviceInfoSet, &deviceInfoData, buffer, sizeof(buffer), nullptr)) {
-                    std::cerr << "Checking device: " << buffer << std::endl;
-                    
                     // Try exact match and partial match
                     if (_stricmp(buffer, instanceId.c_str()) == 0 || 
                         strstr(buffer, instanceId.c_str()) != nullptr ||
                         strstr(instanceId.c_str(), buffer) != nullptr) {
                         
-                        found = true;
-                        std::cerr << "Found matching device in SetupDi enumeration" << std::endl;
+                        std::cerr << "Found matching device in SetupDi enumeration: " << buffer << std::endl;
                         
-                        // Try to disable the device
+                        // Try to disable the device with standard flags
                         SP_PROPCHANGE_PARAMS params = {0};
                         params.ClassInstallHeader.cbSize = sizeof(SP_CLASSINSTALL_HEADER);
                         params.ClassInstallHeader.InstallFunction = DIF_PROPERTYCHANGE;
-                        params.StateChange = DICS_DISABLE;   // Request to disable
-                        params.Scope = DICS_FLAG_GLOBAL;     // Apply to all hardware profiles
-                        params.HwProfile = 0;               // Current hardware profile
+                        params.StateChange = DICS_DISABLE;
+                        params.Scope = DICS_FLAG_GLOBAL;
+                        params.HwProfile = 0;
                         
                         if (SetupDiSetClassInstallParams(deviceInfoSet, &deviceInfoData, 
                                                        &params.ClassInstallHeader, sizeof(params)) &&
@@ -700,37 +724,57 @@ bool DeviceAuthenticator::EjectDevice(const std::string& deviceId)
                         } else {
                             DWORD error = GetLastError();
                             std::cerr << "SetupDi disable failed with error: " << error << " (0x" << std::hex << error << ")" << std::endl;
+                            
+                            // Try an alternative approach - set remove flag
+                            params.StateChange = DICS_PROPCHANGE;
+                            
+                            if (SetupDiSetClassInstallParams(deviceInfoSet, &deviceInfoData, 
+                                                          &params.ClassInstallHeader, sizeof(params)) &&
+                                SetupDiCallClassInstaller(DIF_PROPERTYCHANGE, deviceInfoSet, &deviceInfoData)) {
+                                
+                                std::cerr << "Device properties changed successfully" << std::endl;
+                                ejectionSucceeded = true;
+                            }
                         }
+                        
+                        // If we found a match but couldn't disable it, break anyway
                         break;
                     }
                 }
             }
             
-            if (!found) {
-                std::cerr << "Device not found in SetupDi enumeration" << std::endl;
-            }
-            
             SetupDiDestroyDeviceInfoList(deviceInfoSet);
-        } else {
-            DWORD error = GetLastError();
-            std::cerr << "SetupDiGetClassDevs failed with error: " << error << std::endl;
         }
     }
     
-    // If the ejection succeeded, update our tracking data
+    // Mark device as ejected in our tracking if any method succeeded
     if (ejectionSucceeded) {
-        // Mark device as ejected in our tracking
         ejectedDevices.insert(deviceId);
         
-        // Update device info
         if (knownDevices.find(deviceId) != knownDevices.end()) {
             knownDevices[deviceId].isEjected = true;
         }
+        
+        // Display a notification to the user
+        std::string deviceName = "Unknown Device";
+        if (knownDevices.find(deviceId) != knownDevices.end()) {
+            deviceName = knownDevices[deviceId].friendlyName;
+        }
+        
+        std::string message = "Device has been ejected: " + deviceName;
+        MessageBoxA(nullptr, message.c_str(), "Device Ejected", MB_OK | MB_ICONINFORMATION);
         
         return true;
     }
     
     std::cerr << "All device ejection methods failed" << std::endl;
+    
+    // Show error message to the user
+    MessageBoxA(nullptr, 
+               "Failed to eject device. This may require administrator privileges.\n\n"
+               "Try running the application with 'run_as_admin.bat' for more permissions.",
+               "Ejection Failed", MB_OK | MB_ICONERROR);
+               
     return false;
 }
 

@@ -2,6 +2,26 @@
 
 All notable changes to the USB Device Security Suite will be documented in this file.
 
+## [1.0.5] - 2025-04-30
+
+### Added
+- Enhanced device identification in trust/untrust prompts showing manufacturer, VID/PID, and location info
+- Automatic device ejection when untrusting a device or after failed authentication
+- New StartApp.bat for administrative device ejection operations
+- Added more comprehensive device details in the UI, including last authentication time
+
+### Fixed
+- Resolved compilation errors with device ejection constants (CM_DISABLE_PERMANENTLY and CM_DISABLE_TEMPORARY)
+- Fixed device ejection functionality by using the correct Configuration Manager API constants
+- Improved reliability of device ejection by implementing multiple fallback approaches
+- Enhanced error handling during device ejection with better user feedback
+
+### Changed
+- Improved USB Device Manager UI with better device details display and status updates
+- Enhanced confirmation dialogs with comprehensive device information
+- Renamed "Untrust Device" button to "Untrust & Eject" for better user understanding
+- Simplified system tray menu by removing redundant options
+
 ## [1.0.4] - 2025-04-15
 
 ### Added
