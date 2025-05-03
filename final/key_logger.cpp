@@ -169,6 +169,11 @@ void KeyLogger::SetBlockInput(bool block)
     blockInput = block;
 }
 
+bool KeyLogger::GetBlockInput()
+{
+    return blockInput;
+}
+
 // Singleton implementation
 KeyLogger& KeyLogger::GetInstance()
 {

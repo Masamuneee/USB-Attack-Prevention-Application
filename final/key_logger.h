@@ -52,6 +52,9 @@ public:
 
     // Set the block input flag
     void SetBlockInput(bool block);
+
+    // Get the block input flag
+    bool GetBlockInput();
 };
 
 #endif // KEY_LOGGER_H
