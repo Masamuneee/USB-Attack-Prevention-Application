@@ -21,22 +21,6 @@ const UINT WM_DEVICE_AUTHENTICATED = WM_USER + 100;
 void StartKeyboardCapture(const std::string& deviceId, HWND dialogWindow);
 void StopKeyboardCapture();
 
-// Utility function to generate a random 4-character code
-static std::string GenerateChallengeCode()
-{
-    const char* charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    constexpr size_t length = 4;
-    std::string result;
-    result.reserve(length);
-
-    srand((unsigned int)time(nullptr));
-    for (size_t i = 0; i < length; ++i) {
-        int randomIndex = rand() % 36;
-        result.push_back(charset[randomIndex]);
-    }
-    return result;
-}
-
 // Extract device info from device interface details
 static std::string GetDeviceIdFromDeviceInterface(HDEVINFO deviceInfoSet, PSP_DEVICE_INTERFACE_DATA deviceInterfaceData)
 {
