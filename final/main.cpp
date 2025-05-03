@@ -19,10 +19,15 @@ void InitializeApplication()
     analyzer.AddBlacklistedWord("cmd");
     analyzer.AddBlacklistedWord("powershell");
 
+    // Load trusted devices first so they'll be recognized during startup
+    authenticator.LoadTrustedDevices();
+    
     // Start services
     logger.Start();
     authenticator.Start();
     analyzer.Start();
+    
+    std::cerr << "USB Manager initialized - trusted devices loaded" << std::endl;
 }
 
 // Windows GUI application entry point

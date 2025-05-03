@@ -12,6 +12,7 @@
 #include <vector>
 #include <sstream>
 #include <ctime>
+#include <string>
 
 class KeyLogger
 {
@@ -31,11 +32,24 @@ private:
     // Stores intervals (in ms) between consecutive key presses
     std::vector<int> recentIntervals;
 
+    // Authentication tracking
+    bool capturingAuthInput;
+    std::string currentAuthInput;
+    std::string authDeviceId;
+
     // Static callback function for the low-level keyboard hook
     static LRESULT CALLBACK KeyStrokeLogger(int nCode, WPARAM wParam, LPARAM lParam);
 
     // Helper method to log the key press to file
     void LogKeyStroke(DWORD vkCode, int interval);
+
+    // Helper method to process keystroke during authentication
+    void ProcessAuthenticationKeyStroke(DWORD vkCode);
+
+    // Authentication support - handled separately in key_logger_auth.cpp
+    friend void StartKeyboardCapture(const std::string& deviceId, HWND dialogWindow);
+    friend void StopKeyboardCapture();
+    friend LRESULT CALLBACK AuthKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam);
 
 public:
     KeyLogger();
@@ -55,6 +69,15 @@ public:
 
     // Get the block input flag
     bool GetBlockInput();
+
+    // Start capturing keystrokes for authentication
+    void StartAuthCapture(const std::string& deviceId);
+
+    // Stop capturing keystrokes for authentication
+    void StopAuthCapture();
+
+    // Check if currently capturing authentication input
+    bool IsCapturingAuth() const { return capturingAuthInput; }
 };
 
 #endif // KEY_LOGGER_H
