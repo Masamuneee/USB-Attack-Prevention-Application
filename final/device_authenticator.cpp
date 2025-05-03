@@ -17,21 +17,9 @@ const char* DEVICE_WINDOW_CLASS = "USBDeviceNotificationClass";
 // Message when a device has been authenticated
 const UINT WM_DEVICE_AUTHENTICATED = WM_USER + 100;
 
-// Utility function to generate a random 4-character code
-static std::string GenerateChallengeCode()
-{
-    const char* charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    constexpr size_t length = 4;
-    std::string result;
-    result.reserve(length);
-
-    srand((unsigned int)time(nullptr));
-    for (size_t i = 0; i < length; ++i) {
-        int randomIndex = rand() % 36;
-        result.push_back(charset[randomIndex]);
-    }
-    return result;
-}
+// Function declarations for keyboard capture
+void StartKeyboardCapture(const std::string& deviceId, HWND dialogWindow);
+void StopKeyboardCapture();
 
 // Extract device info from device interface details
 static std::string GetDeviceIdFromDeviceInterface(HDEVINFO deviceInfoSet, PSP_DEVICE_INTERFACE_DATA deviceInterfaceData)
@@ -185,7 +173,7 @@ static bool PromptUserForAuthentication(HWND parent, const std::string& deviceNa
         "STATIC",
         "USB Device Authentication",
         WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
-        CW_USEDEFAULT, CW_USEDEFAULT, 350, 200,
+        CW_USEDEFAULT, CW_USEDEFAULT, 450, 280,  // Increased from 350x200 to 450x280
         parent, nullptr, GetModuleHandle(nullptr), nullptr
     );
     
@@ -213,27 +201,27 @@ static bool PromptUserForAuthentication(HWND parent, const std::string& deviceNa
                           "\n\nPlease type the following code on that keyboard to verify:";
     CreateWindowEx(0, "STATIC", infoText.c_str(),
                   WS_CHILD | WS_VISIBLE | SS_LEFT,
-                  20, 20, 310, 60, hDlg, nullptr, GetModuleHandle(nullptr), nullptr);
+                  30, 30, 390, 80, hDlg, nullptr, GetModuleHandle(nullptr), nullptr);
     
     // Create the challenge code display (larger font for better visibility)
     HWND hCodeText = CreateWindowEx(0, "STATIC", code.c_str(),
                                    WS_CHILD | WS_VISIBLE | SS_CENTER,
-                                   20, 90, 310, 30, hDlg, nullptr, GetModuleHandle(nullptr), nullptr);
+                                   30, 120, 390, 50, hDlg, nullptr, GetModuleHandle(nullptr), nullptr);
                                    
     // Set larger font for the code
-    HFONT hFont = CreateFont(24, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, 
+    HFONT hFont = CreateFont(36, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,  
                             DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 
                             DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
     SendMessage(hCodeText, WM_SETFONT, (WPARAM)hFont, TRUE);
     
-    // Create the verify and cancel buttons
+    // Create the verify and cancel buttons - made larger
     HWND hBtnVerify = CreateWindowEx(0, "BUTTON", "Verify",
                                     WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                    180, 140, 70, 25, hDlg, (HMENU)IDOK, GetModuleHandle(nullptr), nullptr);
+                                    220, 200, 100, 40, hDlg, (HMENU)IDOK, GetModuleHandle(nullptr), nullptr);
                                     
     HWND hBtnCancel = CreateWindowEx(0, "BUTTON", "Cancel",
                                     WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                    260, 140, 70, 25, hDlg, (HMENU)IDCANCEL, GetModuleHandle(nullptr), nullptr);
+                                    330, 200, 100, 40, hDlg, (HMENU)IDCANCEL, GetModuleHandle(nullptr), nullptr);
     
     // Set the focus to the verify button
     SetFocus(hBtnVerify);
@@ -271,6 +259,95 @@ static bool PromptUserForAuthentication(HWND parent, const std::string& deviceNa
     return dialogResult;
 }
 
+// Static function for the authentication dialog window procedure
+static LRESULT CALLBACK AuthenticationDialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    // Move variable declarations outside the switch statement to fix the crossing initialization error
+    DeviceAuthenticator* pAuth = NULL;
+    char* input = NULL;
+    std::string statusText;
+    HWND hStatus = NULL;
+    const char* authCode = NULL;
+    const char* deviceId = NULL;
+
+    switch (msg) {
+        case WM_COMMAND:
+            if (LOWORD(wParam) == IDCANCEL) {
+                // Get the authenticator instance
+                pAuth = (DeviceAuthenticator*)GetProp(hwnd, "DeviceAuthenticator");
+                if (pAuth) {
+                    pAuth->CancelAuthentication();
+                }
+                
+                // Free stored properties
+                free(GetProp(hwnd, "AuthCode"));
+                free(GetProp(hwnd, "DeviceId"));
+                DeleteObject((HFONT)GetProp(hwnd, "StatusFont"));  // Delete the status font
+                RemoveProp(hwnd, "StatusText");
+                RemoveProp(hwnd, "DeviceAuthenticator");
+                RemoveProp(hwnd, "AuthCode");
+                RemoveProp(hwnd, "DeviceId");
+                RemoveProp(hwnd, "StatusFont");
+                
+                DestroyWindow(hwnd);
+                return TRUE;
+            }
+            break;
+        
+        case WM_DESTROY:
+            // Make sure we clean up if the window is closed
+            pAuth = (DeviceAuthenticator*)GetProp(hwnd, "DeviceAuthenticator");
+            if (pAuth && pAuth->IsAuthenticating()) {
+                pAuth->CancelAuthentication();
+            }
+            
+            // Free stored properties
+            free(GetProp(hwnd, "AuthCode"));
+            free(GetProp(hwnd, "DeviceId"));
+            DeleteObject((HFONT)GetProp(hwnd, "StatusFont"));  // Delete the status font
+            RemoveProp(hwnd, "StatusText");
+            RemoveProp(hwnd, "DeviceAuthenticator");
+            RemoveProp(hwnd, "AuthCode");
+            RemoveProp(hwnd, "DeviceId");
+            RemoveProp(hwnd, "StatusFont");
+            break;
+            
+        case WM_USER + 200: // Custom message for input update
+            // Update the status text with the current input
+            input = (char*)lParam;
+            if (input) {
+                statusText = "Input: ";
+                statusText += input;
+                
+                hStatus = (HWND)GetProp(hwnd, "StatusText");
+                if (hStatus) {
+                    SetWindowTextA(hStatus, statusText.c_str());
+                }
+                
+                // Check if authentication is complete
+                authCode = (const char*)GetProp(hwnd, "AuthCode");
+                if (authCode && strcmp(input, authCode) == 0) {
+                    // Authentication succeeded
+                    pAuth = (DeviceAuthenticator*)GetProp(hwnd, "DeviceAuthenticator");
+                    deviceId = (const char*)GetProp(hwnd, "DeviceId");
+                    
+                    if (pAuth && deviceId) {
+                        // Call ProcessAuthInput with success
+                        pAuth->ProcessAuthInput(input, deviceId);
+                    }
+                    
+                    // Close the dialog
+                    DestroyWindow(hwnd);
+                }
+                
+                free(input); // Free the allocated input string
+            }
+            return TRUE;
+    }
+    
+    return DefWindowProc(hwnd, msg, wParam, lParam);
+}
+
 // Static callback for the window procedure
 LRESULT CALLBACK DeviceAuthenticator::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -285,15 +362,28 @@ LRESULT CALLBACK DeviceAuthenticator::WindowProc(HWND hwnd, UINT uMsg, WPARAM wP
                     DEV_BROADCAST_DEVICEINTERFACE* devInterface = (DEV_BROADCAST_DEVICEINTERFACE*)lParam;
                     std::string deviceId = devInterface->dbcc_name;
                     
-                    // Check if it's a keyboard device (simplified)
-                    if (deviceId.find("HID") != std::string::npos && 
-                        (deviceId.find("Keyboard") != std::string::npos || 
-                         deviceId.find("Vid_") != std::string::npos)) {
+                    std::cerr << "Device arrival detected: " << deviceId << std::endl;
+                    
+                    // Check if it's a keyboard device with more reliable detection
+                    bool isKeyboard = deviceId.find("HID") != std::string::npos && 
+                                     (deviceId.find("Keyboard") != std::string::npos || 
+                                      deviceId.find("Vid_") != std::string::npos || 
+                                      deviceId.find("PID_") != std::string::npos);
+                                      
+                    if (isKeyboard) {
+                        std::cerr << "Keyboard device detected, checking authentication status..." << std::endl;
                         
                         if (!authenticator.IsDeviceBlocked(deviceId)) {
-                            bool success = authenticator.AuthenticateDevice(deviceId);
-                            if (!success) {
-                                authenticator.BlockDevice(deviceId);
+                            // Check if it's already trusted
+                            if (authenticator.IsKnownTrustedDevice(deviceId)) {
+                                std::cerr << "Device is already trusted" << std::endl;
+                                authenticator.NotifyListeners(AuthEvent::DEVICE_AUTHENTICATED, deviceId);
+                            } else {
+                                std::cerr << "Starting authentication for device..." << std::endl;
+                                bool success = authenticator.AuthenticateDevice(deviceId);
+                                if (!success) {
+                                    authenticator.BlockDevice(deviceId);
+                                }
                             }
                         } else {
                             // Device is blocked, notify user
@@ -327,8 +417,20 @@ DeviceAuthenticator& DeviceAuthenticator::GetInstance()
 }
 
 DeviceAuthenticator::DeviceAuthenticator()
-    : messageWindow(nullptr), deviceNotifyHandle(nullptr)
+    : messageWindow(nullptr), deviceNotifyHandle(nullptr), authenticationInProgress(false)
 {
+    // Determine path for trusted devices file
+    char exePath[MAX_PATH];
+    GetModuleFileNameA(NULL, exePath, MAX_PATH);
+    
+    std::string exeDir = exePath;
+    size_t lastSlash = exeDir.find_last_of("\\/");
+    if (lastSlash != std::string::npos) {
+        exeDir = exeDir.substr(0, lastSlash);
+    }
+    
+    trustedDevicesPath = exeDir + "\\trusted_usb_devices.dat";
+    std::cerr << "Trusted devices will be stored at: " << trustedDevicesPath << std::endl;
 }
 
 DeviceAuthenticator::~DeviceAuthenticator()
@@ -346,6 +448,18 @@ void DeviceAuthenticator::Start()
     wcex.lpszClassName = DEVICE_WINDOW_CLASS;
     
     RegisterClassEx(&wcex);
+    
+    // Register a proper window class for the authentication dialog
+    WNDCLASSEX authDlgClass = {0};
+    authDlgClass.cbSize = sizeof(WNDCLASSEX);
+    authDlgClass.style = CS_HREDRAW | CS_VREDRAW;
+    authDlgClass.lpfnWndProc = AuthenticationDialogProc;
+    authDlgClass.hInstance = GetModuleHandle(nullptr);
+    authDlgClass.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    authDlgClass.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+    authDlgClass.lpszClassName = "AuthDlgClass";
+    
+    RegisterClassEx(&authDlgClass);
     
     // Create a hidden window to receive device notifications
     messageWindow = CreateWindow(DEVICE_WINDOW_CLASS, "USB Device Monitor", 
@@ -377,10 +491,11 @@ void DeviceAuthenticator::Stop()
 
 void DeviceAuthenticator::RegisterDeviceNotifications()
 {
-    // Set up the device interface class guid for HIDs (which includes keyboards)
+    // Set up the device interface class guid for USB devices
     DEV_BROADCAST_DEVICEINTERFACE notificationFilter = {0};
     notificationFilter.dbcc_size = sizeof(notificationFilter);
     notificationFilter.dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE;
+    // Handle every USB device arrival (we'll check "is it a keyboard?" in WM_DEVICECHANGE)
     notificationFilter.dbcc_classguid = GUID_DEVINTERFACE_KEYBOARD;
     
     deviceNotifyHandle = RegisterDeviceNotification(
@@ -388,6 +503,13 @@ void DeviceAuthenticator::RegisterDeviceNotifications()
         &notificationFilter,
         DEVICE_NOTIFY_WINDOW_HANDLE
     );
+    
+    if (!deviceNotifyHandle) {
+        DWORD error = GetLastError();
+        std::cerr << "Failed to register for device notifications. Error: " << error << std::endl;
+    } else {
+        std::cerr << "Successfully registered for USB device notifications" << std::endl;
+    }
 }
 
 void DeviceAuthenticator::EnumerateExistingDevices()
@@ -417,22 +539,37 @@ void DeviceAuthenticator::EnumerateExistingDevices()
             std::string friendlyName = GetDeviceFriendlyName(deviceInfoSet, &deviceInfoData);
             std::string instanceId = GetDeviceInstanceId(deviceInfoSet, &deviceInfoData);
             
+            // Create enhanced device info
             USBDeviceInfo deviceInfo(deviceId, friendlyName);
-            knownDevices[deviceId] = deviceInfo;
+            deviceInfo.instanceId = instanceId;
+            deviceInfo.hardwareId = GetDeviceHardwareId(deviceInfoSet, &deviceInfoData);
+            deviceInfo.serialNumber = GetDeviceSerialNumber(deviceInfoSet, &deviceInfoData);
             
-            // Get additional details for display
-            char locationInfo[256] = {0};
-            if (SetupDiGetDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_LOCATION_INFORMATION, 
-                                               NULL, (BYTE*)locationInfo, sizeof(locationInfo), NULL)) {
-                // Include location info if available
+            // Check if this is a previously trusted device
+            bool isTrusted = false;
+            for (const auto& pair : knownDevices) {
+                if (pair.second.authenticated && deviceInfo.IsSamePhysicalDevice(pair.second)) {
+                    isTrusted = true;
+                    break;
+                }
             }
             
+            if (isTrusted) {
+                deviceInfo.authenticated = true;
+                knownDevices[deviceId] = deviceInfo;
+                std::cerr << "Found previously trusted device: " << friendlyName << std::endl;
+                continue;
+            }
+            
+            knownDevices[deviceId] = deviceInfo;
             // Create a detailed message showing device identification
             std::string message = "Do you trust this keyboard device?\n\n";
             message += "Device Name: " + friendlyName + "\n";
             message += "Device ID: " + deviceId + "\n";
             
-            if (locationInfo[0] != '\0') {
+            char locationInfo[256] = {0};
+            if (SetupDiGetDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_LOCATION_INFORMATION, 
+                                               NULL, (BYTE*)locationInfo, sizeof(locationInfo), NULL)) {
                 message += "Location: " + std::string(locationInfo) + "\n";
             }
             
@@ -451,10 +588,19 @@ void DeviceAuthenticator::EnumerateExistingDevices()
     }
     
     SetupDiDestroyDeviceInfoList(deviceInfoSet);
+    
+    // Save trusted devices after initial enumeration
+    SaveTrustedDevices();
 }
 
 bool DeviceAuthenticator::AuthenticateDevice(const std::string& deviceId)
 {
+    if (authenticationInProgress) {
+        std::cerr << "Cannot authenticate device " << deviceId 
+                 << " - authentication already in progress" << std::endl;
+        return false;
+    }
+
     if (authenticationAttempts.find(deviceId) == authenticationAttempts.end()) {
         authenticationAttempts[deviceId] = 0;
     }
@@ -500,29 +646,224 @@ bool DeviceAuthenticator::AuthenticateDevice(const std::string& deviceId)
         deviceName = knownDevices[deviceId].friendlyName;
     }
     
+    // Check if this is a reconnection of a previously trusted device
+    if (IsKnownTrustedDevice(deviceId)) {
+        std::cerr << "Device " << deviceName << " recognized as previously trusted" << std::endl;
+        
+        knownDevices[deviceId].authenticated = true;
+        knownDevices[deviceId].lastAuthAttempt = std::chrono::system_clock::now();
+        
+        // Save the updated trusted devices list
+        SaveTrustedDevices();
+        
+        NotifyListeners(AuthEvent::DEVICE_AUTHENTICATED, deviceId);
+        return true;
+    }
+    
     // Update last authentication attempt time
     knownDevices[deviceId].lastAuthAttempt = std::chrono::system_clock::now();
 
-    // Generate challenge code and prompt user
-    std::string code = GenerateChallengeCode();
-    bool userOk = PromptUserForAuthentication(messageWindow, deviceName, code);
+    // Generate 6-digit numeric code
+    std::string authCode = GenerateAuthCode();
+    std::cerr << "Generated auth code for " << deviceName << ": " << authCode << std::endl;
     
-    if (userOk) {
-        knownDevices[deviceId].authenticated = true;
+    // Set current authentication state
+    authenticationInProgress = true;
+    currentAuthDeviceId = deviceId;
+    currentAuthCode = authCode;
+    
+    // Show the authentication dialog with the 6-digit code
+    // Use our properly registered window class instead of "STATIC"
+    HWND hDlg = CreateWindowEx(
+        WS_EX_DLGMODALFRAME | WS_EX_TOPMOST,
+        "AuthDlgClass",  // Use our proper window class
+        "USB Device Authentication",
+        WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
+        CW_USEDEFAULT, CW_USEDEFAULT, 500, 350,  // Increased from 400x250 to 500x350
+        messageWindow, nullptr, GetModuleHandle(nullptr), nullptr
+    );
+    
+    if (!hDlg) {
+        // If dialog creation failed, log the error and try simpler method
+        DWORD error = GetLastError();
+        std::cerr << "Failed to create authentication dialog window. Error: " << error << std::endl;
         
-        // Notify listeners about the successful authentication
-        NotifyListeners(AuthEvent::DEVICE_AUTHENTICATED, deviceId);
-        return true;
-    } else {
+        authenticationInProgress = false;
+        bool userOk = PromptUserForAuthentication(messageWindow, deviceName, authCode);
+        
+        if (userOk) {
+            knownDevices[deviceId].authenticated = true;
+            SaveTrustedDevices();
+            NotifyListeners(AuthEvent::DEVICE_AUTHENTICATED, deviceId);
+            return true;
+        } else {
+            authenticationAttempts[deviceId]++;
+            NotifyListeners(AuthEvent::DEVICE_AUTH_FAILED, deviceId);
+            EjectDevice(deviceId);
+            return false;
+        }
+    }
+    
+    // Center the dialog on screen
+    RECT rc, rcDlg, rcDesktop;
+    GetWindowRect(hDlg, &rcDlg);
+    GetWindowRect(GetDesktopWindow(), &rcDesktop);
+    
+    int dlgWidth = rcDlg.right - rcDlg.left;
+    int dlgHeight = rcDlg.bottom - rcDlg.top;
+    
+    int newX = (rcDesktop.right - dlgWidth) / 2;
+    int newY = (rcDesktop.bottom - dlgHeight) / 2;
+    
+    SetWindowPos(hDlg, nullptr, newX, newY, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+    
+    // Create the message text with larger margins for better readability
+    std::string message = "A new USB keyboard device needs authentication:\n\n";
+    message += "Device Name: " + deviceName + "\n";
+    
+    if (!knownDevices[deviceId].hardwareId.empty()) {
+        message += "Hardware ID: " + knownDevices[deviceId].hardwareId + "\n";
+    }
+    
+    message += "\nPlease type the following 6-digit code using the device keyboard to verify it:";
+    
+    CreateWindowEx(
+        0, "STATIC", message.c_str(),
+        WS_CHILD | WS_VISIBLE | SS_LEFT,
+        30, 30, 440, 110, hDlg, nullptr, GetModuleHandle(nullptr), nullptr
+    );
+    
+    // Create the authentication code display with larger font
+    HWND hCodeText = CreateWindowEx(0, "STATIC", authCode.c_str(),
+                                   WS_CHILD | WS_VISIBLE | SS_CENTER,
+                                   30, 150, 440, 60, hDlg, nullptr, GetModuleHandle(nullptr), nullptr);
+    
+    // Create a larger font for the code
+    HFONT hFont = CreateFont(48, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,  // Increased from 36 to 48
+                            DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                            CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Arial");
+    SendMessage(hCodeText, WM_SETFONT, (WPARAM)hFont, TRUE);
+    
+    // Create status text that will show the input as it's typed
+    HWND hStatusText = CreateWindowEx(0, "STATIC", "Input: ",
+                                     WS_CHILD | WS_VISIBLE | SS_LEFT,
+                                     30, 230, 440, 30, hDlg, nullptr, GetModuleHandle(nullptr), nullptr);
+    
+    // Create a font for the status text (make it larger too)
+    HFONT hStatusFont = CreateFont(24, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+                                  DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                                  CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Arial");
+    SendMessage(hStatusText, WM_SETFONT, (WPARAM)hStatusFont, TRUE);
+    
+    // Create cancel button - made larger and positioned lower
+    HWND hCancel = CreateWindowEx(0, "BUTTON", "Cancel",
+                                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                 200, 280, 120, 40, hDlg, (HMENU)IDCANCEL, GetModuleHandle(nullptr), nullptr);
+    
+    // Store the dialog handle and this pointer
+    SetProp(hDlg, "StatusText", (HANDLE)hStatusText);
+    SetProp(hDlg, "DeviceAuthenticator", (HANDLE)this);
+    SetProp(hDlg, "AuthCode", _strdup(authCode.c_str()));
+    SetProp(hDlg, "DeviceId", _strdup(deviceId.c_str()));
+    SetProp(hDlg, "StatusFont", hStatusFont);
+    
+    // Set the window procedure using our static function
+    SetWindowLongPtr(hDlg, GWLP_WNDPROC, (LONG_PTR)AuthenticationDialogProc);
+    
+    // Start KeyLogger authentication capture mode - no extern "C" needed
+    StartKeyboardCapture(deviceId, hDlg);
+    
+    SetFocus(hDlg);
+    ShowWindow(hDlg, SW_SHOW);
+    UpdateWindow(hDlg);
+    
+    // The authentication result will be handled in the ProcessAuthInput method
+    return false;
+}
+
+void DeviceAuthenticator::CancelAuthentication()
+{
+    if (!authenticationInProgress) {
+        return;
+    }
+    
+    std::string deviceId = currentAuthDeviceId;
+    
+    // Reset authentication state
+    authenticationInProgress = false;
+    currentAuthDeviceId.clear();
+    currentAuthCode.clear();
+    
+    if (!deviceId.empty()) {
+        // Increment authentication failures
         authenticationAttempts[deviceId]++;
         
-        // Notify listeners about the failed authentication
+        // Notify listeners
         NotifyListeners(AuthEvent::DEVICE_AUTH_FAILED, deviceId);
         
-        // Automatically eject the device when authentication fails
+        // Eject the device
         EjectDevice(deviceId);
+    }
+    
+    // Stop keyboard capture - no extern "C" needed
+    StopKeyboardCapture();
+}
+
+bool DeviceAuthenticator::ProcessAuthInput(const std::string& input, const std::string& deviceId)
+{
+    if (!authenticationInProgress || deviceId != currentAuthDeviceId) {
         return false;
     }
+    
+    bool success = (input == currentAuthCode);
+    
+    if (success) {
+        // Authentication successful
+        knownDevices[deviceId].authenticated = true;
+        
+        // Save trusted devices list
+        SaveTrustedDevices();
+        
+        // Notify listeners
+        NotifyListeners(AuthEvent::DEVICE_AUTHENTICATED, deviceId);
+    } else {
+        // Authentication failed
+        authenticationAttempts[deviceId]++;
+        
+        // Notify listeners
+        NotifyListeners(AuthEvent::DEVICE_AUTH_FAILED, deviceId);
+        
+        // Eject the device
+        EjectDevice(deviceId);
+    }
+    
+    // Reset authentication state
+    authenticationInProgress = false;
+    currentAuthDeviceId.clear();
+    currentAuthCode.clear();
+    
+    // Stop keyboard capture - no extern "C" needed
+    StopKeyboardCapture();
+    
+    return success;
+}
+
+// Generate a 6-digit numeric code
+std::string DeviceAuthenticator::GenerateAuthCode()
+{
+    std::string result;
+    result.reserve(6);
+    
+    // Use current time and high-resolution clock for better randomness
+    srand((unsigned int)time(nullptr) ^ 
+          (unsigned int)std::chrono::high_resolution_clock::now().time_since_epoch().count());
+    
+    // Generate 6 random digits
+    for (int i = 0; i < 6; i++) {
+        result.push_back('0' + (rand() % 10)); // Digits 0-9
+    }
+    
+    return result;
 }
 
 void DeviceAuthenticator::BlockDevice(const std::string& deviceId)
@@ -988,4 +1329,214 @@ std::string DeviceAuthenticator::GetDeviceInstanceId(HDEVINFO deviceInfoSet, PSP
         return std::string(buffer);
     }
     return "";
+}
+
+// Extract hardware ID (VID/PID) from device
+std::string DeviceAuthenticator::GetDeviceHardwareId(HDEVINFO deviceInfoSet, PSP_DEVINFO_DATA deviceInfoData)
+{
+    char buffer[256] = {0};
+    if (!SetupDiGetDeviceRegistryProperty(deviceInfoSet, deviceInfoData, SPDRP_HARDWAREID,
+                                       nullptr, (BYTE*)buffer, sizeof(buffer), nullptr)) {
+        return "";
+    }
+    
+    std::string hwid = buffer;
+    std::string vidPid;
+    
+    // Look for VID_ and PID_ in the hardware ID
+    size_t vidPos = hwid.find("VID_");
+    size_t pidPos = hwid.find("PID_");
+    
+    if (vidPos != std::string::npos && pidPos != std::string::npos) {
+        // Extract VID and PID values (8 chars each: VID_xxxx and PID_yyyy)
+        std::string vid = hwid.substr(vidPos, 8);
+        std::string pid = hwid.substr(pidPos, 8);
+        vidPid = vid + "&" + pid;
+    }
+    
+    return vidPid;
+}
+
+// Extract serial number if available
+std::string DeviceAuthenticator::GetDeviceSerialNumber(HDEVINFO deviceInfoSet, PSP_DEVINFO_DATA deviceInfoData)
+{
+    char buffer[256] = {0};
+    
+    // Try to get serial number from various properties
+    if (SetupDiGetDeviceRegistryProperty(deviceInfoSet, deviceInfoData, SPDRP_PHYSICAL_DEVICE_OBJECT_NAME,
+                                      nullptr, (BYTE*)buffer, sizeof(buffer), nullptr)) {
+        return std::string(buffer);
+    }
+    
+    return "";
+}
+
+// Check if a device matches any known trusted device
+bool DeviceAuthenticator::IsKnownTrustedDevice(const std::string& deviceId)
+{
+    auto it = knownDevices.find(deviceId);
+    if (it == knownDevices.end()) {
+        return false; // New device ID, need to check hardware identifiers
+    }
+    
+    if (it->second.authenticated) {
+        return true; // Already trusted this exact device ID
+    }
+    
+    // Get the full device info for matching
+    USBDeviceInfo& newDevice = it->second;
+    
+    // Look for matching hardware identifiers in trusted devices
+    for (const auto& pair : knownDevices) {
+        const USBDeviceInfo& existingDevice = pair.second;
+        
+        if (existingDevice.authenticated && 
+            newDevice.IsSamePhysicalDevice(existingDevice)) {
+            // Found a match! This is a reconnected trusted device
+            std::cerr << "Recognized reconnected trusted device: " 
+                     << newDevice.friendlyName << std::endl;
+                     
+            // Transfer trust to this device ID
+            newDevice.authenticated = true;
+            return true;
+        }
+    }
+    
+    return false; // No matching trusted device found
+}
+
+// Save trusted devices to file
+bool DeviceAuthenticator::SaveTrustedDevices() 
+{
+    try {
+        std::ofstream file(trustedDevicesPath, std::ios::binary);
+        if (!file.is_open()) {
+            std::cerr << "Failed to open trusted devices file for writing" << std::endl;
+            return false;
+        }
+        
+        // Count trusted devices first
+        int trustedCount = 0;
+        for (const auto& pair : knownDevices) {
+            if (pair.second.authenticated) {
+                trustedCount++;
+            }
+        }
+        
+        // Write count
+        file.write(reinterpret_cast<const char*>(&trustedCount), sizeof(int));
+        
+        // Write each trusted device
+        for (const auto& pair : knownDevices) {
+            const USBDeviceInfo& device = pair.second;
+            if (device.authenticated) {
+                // Write device ID
+                int idLength = static_cast<int>(device.deviceId.length());
+                file.write(reinterpret_cast<const char*>(&idLength), sizeof(int));
+                file.write(device.deviceId.c_str(), idLength);
+                
+                // Write friendly name
+                int nameLength = static_cast<int>(device.friendlyName.length());
+                file.write(reinterpret_cast<const char*>(&nameLength), sizeof(int));
+                file.write(device.friendlyName.c_str(), nameLength);
+                
+                // Write instance ID
+                int instanceIdLength = static_cast<int>(device.instanceId.length());
+                file.write(reinterpret_cast<const char*>(&instanceIdLength), sizeof(int));
+                file.write(device.instanceId.c_str(), instanceIdLength);
+                
+                // Write hardware ID
+                int hardwareIdLength = static_cast<int>(device.hardwareId.length());
+                file.write(reinterpret_cast<const char*>(&hardwareIdLength), sizeof(int));
+                file.write(device.hardwareId.c_str(), hardwareIdLength);
+                
+                // Write serial number
+                int serialLength = static_cast<int>(device.serialNumber.length());
+                file.write(reinterpret_cast<const char*>(&serialLength), sizeof(int));
+                file.write(device.serialNumber.c_str(), serialLength);
+            }
+        }
+        
+        std::cerr << "Saved " << trustedCount << " trusted devices to " << trustedDevicesPath << std::endl;
+        return true;
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error saving trusted devices: " << e.what() << std::endl;
+        return false;
+    }
+}
+
+// Load trusted devices from file
+bool DeviceAuthenticator::LoadTrustedDevices()
+{
+    try {
+        std::ifstream file(trustedDevicesPath, std::ios::binary);
+        if (!file.is_open()) {
+            std::cerr << "No trusted devices file found at " << trustedDevicesPath << std::endl;
+            return false;
+        }
+        
+        // Read count
+        int trustedCount = 0;
+        file.read(reinterpret_cast<char*>(&trustedCount), sizeof(int));
+        
+        // Read each trusted device
+        for (int i = 0; i < trustedCount; i++) {
+            USBDeviceInfo device;
+            device.authenticated = true;
+            
+            // Read device ID
+            int idLength = 0;
+            file.read(reinterpret_cast<char*>(&idLength), sizeof(int));
+            
+            std::vector<char> idBuffer(idLength + 1, 0);
+            file.read(idBuffer.data(), idLength);
+            device.deviceId = idBuffer.data();
+            
+            // Read friendly name
+            int nameLength = 0;
+            file.read(reinterpret_cast<char*>(&nameLength), sizeof(int));
+            
+            std::vector<char> nameBuffer(nameLength + 1, 0);
+            file.read(nameBuffer.data(), nameLength);
+            device.friendlyName = nameBuffer.data();
+            
+            // Read instance ID
+            int instanceIdLength = 0;
+            file.read(reinterpret_cast<char*>(&instanceIdLength), sizeof(int));
+            
+            std::vector<char> instanceBuffer(instanceIdLength + 1, 0);
+            file.read(instanceBuffer.data(), instanceIdLength);
+            device.instanceId = instanceBuffer.data();
+            
+            // Read hardware ID
+            int hardwareIdLength = 0;
+            file.read(reinterpret_cast<char*>(&hardwareIdLength), sizeof(int));
+            
+            std::vector<char> hwBuffer(hardwareIdLength + 1, 0);
+            file.read(hwBuffer.data(), hardwareIdLength);
+            device.hardwareId = hwBuffer.data();
+            
+            // Read serial number
+            int serialLength = 0;
+            file.read(reinterpret_cast<char*>(&serialLength), sizeof(int));
+            
+            std::vector<char> serialBuffer(serialLength + 1, 0);
+            file.read(serialBuffer.data(), serialLength);
+            device.serialNumber = serialBuffer.data();
+            
+            // Add to known devices (using device ID as key)
+            knownDevices[device.deviceId] = device;
+            
+            std::cerr << "Loaded trusted device: " << device.friendlyName
+                     << " (HW ID: " << device.hardwareId << ")" << std::endl;
+        }
+        
+        std::cerr << "Loaded " << trustedCount << " trusted devices" << std::endl;
+        return true;
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error loading trusted devices: " << e.what() << std::endl;
+        return false;
+    }
 }

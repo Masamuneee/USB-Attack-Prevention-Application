@@ -2,6 +2,24 @@
 
 All notable changes to the USB Device Security Suite will be documented in this file.
 
+## [1.0.6] - 2025-05-15
+
+### Added
+- Improved detection of USB devices by monitoring all USB interfaces instead of just keyboards
+- Enhanced authentication dialog with increased size for better visibility (500x350px)
+- Larger fonts in authentication dialog for better readability (48pt for code, 24pt for status)
+
+### Fixed
+- Fixed device notification registration to properly detect all USB devices using GUID_DEVINTERFACE_USB_DEVICE
+- Resolved authentication dialog issues by creating a proper window class ("AuthDlgClass")
+- Improved dialog layout with increased margins and button sizes for better user experience
+- Fixed proper font cleanup in authentication dialog to prevent resource leaks
+
+### Changed
+- Authentication dialog now provides more screen space and clearer visual hierarchy
+- Modified device detection logic with more robust keyboard detection capabilities
+- Improved error logging for authentication dialog creation
+
 ## [1.0.5] - 2025-04-30
 
 ### Added

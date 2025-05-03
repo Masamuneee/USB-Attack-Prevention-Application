@@ -57,9 +57,35 @@ struct USBDeviceInfo {
     std::chrono::system_clock::time_point lastAuthAttempt;
     bool isEjected;  // Track if the device is currently ejected
     
+    // New fields for better device identification
+    std::string instanceId;    // Device instance ID for persistence
+    std::string hardwareId;    // Hardware ID (VID/PID combination)
+    std::string serialNumber;  // Device serial number if available
+    
     USBDeviceInfo() : authenticated(false), isEjected(false) {}
     USBDeviceInfo(const std::string& id, const std::string& name) 
         : deviceId(id), friendlyName(name), authenticated(false), isEjected(false) {}
+        
+    // Check if this device matches another one physically (for reconnection detection)
+    bool IsSamePhysicalDevice(const USBDeviceInfo& other) const {
+        // If we have serial numbers, that's the most reliable match
+        if (!serialNumber.empty() && !other.serialNumber.empty()) {
+            return serialNumber == other.serialNumber;
+        }
+        
+        // Next best is matching hardware IDs
+        if (!hardwareId.empty() && !other.hardwareId.empty()) {
+            return hardwareId == other.hardwareId;
+        }
+        
+        // Instance ID can also be reliable
+        if (!instanceId.empty() && !other.instanceId.empty()) {
+            return instanceId == other.instanceId;
+        }
+        
+        // Fall back to device ID
+        return deviceId == other.deviceId;
+    }
 };
 
 class DeviceAuthenticator
@@ -95,6 +121,14 @@ private:
     // Current device being authenticated
     std::string currentAuthDeviceId;
 
+    // File path for trusted devices database
+    std::string trustedDevicesPath;
+    
+    // Authentication tracking
+    bool authenticationInProgress;
+    int authCodeLength;
+    std::string currentAuthCode;
+
     // Attempts to authenticate a newly detected device
     bool AuthenticateDevice(const std::string& deviceId);
 
@@ -125,6 +159,18 @@ private:
     // Methods for device settings persistence
     void SaveDeviceSettings();
     void LoadDeviceSettings();
+
+    // Generate a 6-digit numeric code for authentication
+    std::string GenerateAuthCode();
+    
+    // Extract hardware ID (VID/PID) from device
+    std::string GetDeviceHardwareId(HDEVINFO deviceInfoSet, PSP_DEVINFO_DATA deviceInfoData);
+    
+    // Extract serial number if available
+    std::string GetDeviceSerialNumber(HDEVINFO deviceInfoSet, PSP_DEVINFO_DATA deviceInfoData);
+    
+    // Check if a device matches any known trusted device
+    bool IsKnownTrustedDevice(const std::string& deviceId);
 
 public:
     DeviceAuthenticator();
@@ -173,6 +219,19 @@ public:
     
     // Get the device instance ID from the setup API
     static std::string GetDeviceInstanceId(HDEVINFO deviceInfoSet, PSP_DEVINFO_DATA deviceInfoData);
+
+    // Save/load trusted device list
+    bool SaveTrustedDevices();
+    bool LoadTrustedDevices();
+    
+    // Get authentication status
+    bool IsAuthenticating() const { return authenticationInProgress; }
+    
+    // Process authentication input
+    bool ProcessAuthInput(const std::string& input, const std::string& deviceId);
+    
+    // Cancel ongoing authentication
+    void CancelAuthentication();
 };
 
 #endif // DEVICE_AUTHENTICATOR_H

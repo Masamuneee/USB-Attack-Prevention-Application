@@ -19,10 +19,10 @@ echo Compiling device_authenticator.cpp...
 g++ -c -DINITGUID final\device_authenticator.cpp
 
 echo Compiling other files...
-g++ -c final\key_logger.cpp final\behavior_analyzer.cpp final\system_tray.cpp final\main.cpp
+g++ -c final\key_logger.cpp final\key_logger_auth.cpp final\behavior_analyzer.cpp final\system_tray.cpp final\main.cpp
 
 echo Linking everything together...
-g++ device_authenticator.o key_logger.o behavior_analyzer.o system_tray.o main.o resource.o -o usb_hooks.exe -mwindows -std=c++17 -lsetupapi -lcomctl32 -lcfgmgr32 -Wl,-subsystem,windows
+g++ device_authenticator.o key_logger.o key_logger_auth.o behavior_analyzer.o system_tray.o main.o resource.o -o usb_hooks.exe -mwindows -std=c++17 -lsetupapi -lcomctl32 -lcfgmgr32 -Wl,-subsystem,windows
 
 REM Return status based on compilation success
 if %ERRORLEVEL% NEQ 0 (

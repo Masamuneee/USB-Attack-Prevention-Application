@@ -180,9 +180,9 @@ void SystemTray::CreateTrayIcon()
     
     // Use safe string copy
     #ifdef _MSC_VER
-    strncpy_s(nid.szTip, sizeof(nid.szTip), "USB Device Monitor (v1.0.5)", sizeof(nid.szTip) - 1);
+    strncpy_s(nid.szTip, sizeof(nid.szTip), "USB Device Monitor (v1.0.6)", sizeof(nid.szTip) - 1);
     #else
-    strncpy(nid.szTip, "USB Device Monitor (v1.0.5)", sizeof(nid.szTip) - 1);
+    strncpy(nid.szTip, "USB Device Monitor (v1.0.6)", sizeof(nid.szTip) - 1);
     #endif
     nid.szTip[sizeof(nid.szTip) - 1] = '\0'; // Ensure null-termination
     
@@ -1107,7 +1107,7 @@ void SystemTray::ShowAboutDialog()
     MessageBoxA(
         hwnd,
         "USB Attack Prevention Application\n"
-        "Version 1.0.5\n\n"
+        "Version 1.0.6\n\n"
         "A comprehensive security solution for protecting against malicious USB devices.\n\n"
         "Authors: Masamune (Minh Pham) / Lio (Thai Do)",
         "About USB Monitor",
