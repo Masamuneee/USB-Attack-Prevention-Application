@@ -173,7 +173,7 @@ static bool PromptUserForAuthentication(HWND parent, const std::string& deviceNa
         "STATIC",
         "USB Device Authentication",
         WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
-        CW_USEDEFAULT, CW_USEDEFAULT, 350, 200,
+        CW_USEDEFAULT, CW_USEDEFAULT, 450, 280,  // Increased from 350x200 to 450x280
         parent, nullptr, GetModuleHandle(nullptr), nullptr
     );
     
@@ -201,27 +201,27 @@ static bool PromptUserForAuthentication(HWND parent, const std::string& deviceNa
                           "\n\nPlease type the following code on that keyboard to verify:";
     CreateWindowEx(0, "STATIC", infoText.c_str(),
                   WS_CHILD | WS_VISIBLE | SS_LEFT,
-                  20, 20, 310, 60, hDlg, nullptr, GetModuleHandle(nullptr), nullptr);
+                  30, 30, 390, 80, hDlg, nullptr, GetModuleHandle(nullptr), nullptr);
     
     // Create the challenge code display (larger font for better visibility)
     HWND hCodeText = CreateWindowEx(0, "STATIC", code.c_str(),
                                    WS_CHILD | WS_VISIBLE | SS_CENTER,
-                                   20, 90, 310, 30, hDlg, nullptr, GetModuleHandle(nullptr), nullptr);
+                                   30, 120, 390, 50, hDlg, nullptr, GetModuleHandle(nullptr), nullptr);
                                    
     // Set larger font for the code
-    HFONT hFont = CreateFont(24, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, 
+    HFONT hFont = CreateFont(36, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,  
                             DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 
                             DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
     SendMessage(hCodeText, WM_SETFONT, (WPARAM)hFont, TRUE);
     
-    // Create the verify and cancel buttons
+    // Create the verify and cancel buttons - made larger
     HWND hBtnVerify = CreateWindowEx(0, "BUTTON", "Verify",
                                     WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                    180, 140, 70, 25, hDlg, (HMENU)IDOK, GetModuleHandle(nullptr), nullptr);
+                                    220, 200, 100, 40, hDlg, (HMENU)IDOK, GetModuleHandle(nullptr), nullptr);
                                     
     HWND hBtnCancel = CreateWindowEx(0, "BUTTON", "Cancel",
                                     WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                    260, 140, 70, 25, hDlg, (HMENU)IDCANCEL, GetModuleHandle(nullptr), nullptr);
+                                    330, 200, 100, 40, hDlg, (HMENU)IDCANCEL, GetModuleHandle(nullptr), nullptr);
     
     // Set the focus to the verify button
     SetFocus(hBtnVerify);
@@ -282,10 +282,12 @@ static LRESULT CALLBACK AuthenticationDialogProc(HWND hwnd, UINT msg, WPARAM wPa
                 // Free stored properties
                 free(GetProp(hwnd, "AuthCode"));
                 free(GetProp(hwnd, "DeviceId"));
+                DeleteObject((HFONT)GetProp(hwnd, "StatusFont"));  // Delete the status font
                 RemoveProp(hwnd, "StatusText");
                 RemoveProp(hwnd, "DeviceAuthenticator");
                 RemoveProp(hwnd, "AuthCode");
                 RemoveProp(hwnd, "DeviceId");
+                RemoveProp(hwnd, "StatusFont");
                 
                 DestroyWindow(hwnd);
                 return TRUE;
@@ -302,10 +304,12 @@ static LRESULT CALLBACK AuthenticationDialogProc(HWND hwnd, UINT msg, WPARAM wPa
             // Free stored properties
             free(GetProp(hwnd, "AuthCode"));
             free(GetProp(hwnd, "DeviceId"));
+            DeleteObject((HFONT)GetProp(hwnd, "StatusFont"));  // Delete the status font
             RemoveProp(hwnd, "StatusText");
             RemoveProp(hwnd, "DeviceAuthenticator");
             RemoveProp(hwnd, "AuthCode");
             RemoveProp(hwnd, "DeviceId");
+            RemoveProp(hwnd, "StatusFont");
             break;
             
         case WM_USER + 200: // Custom message for input update
@@ -358,15 +362,28 @@ LRESULT CALLBACK DeviceAuthenticator::WindowProc(HWND hwnd, UINT uMsg, WPARAM wP
                     DEV_BROADCAST_DEVICEINTERFACE* devInterface = (DEV_BROADCAST_DEVICEINTERFACE*)lParam;
                     std::string deviceId = devInterface->dbcc_name;
                     
-                    // Check if it's a keyboard device (simplified)
-                    if (deviceId.find("HID") != std::string::npos && 
-                        (deviceId.find("Keyboard") != std::string::npos || 
-                         deviceId.find("Vid_") != std::string::npos)) {
+                    std::cerr << "Device arrival detected: " << deviceId << std::endl;
+                    
+                    // Check if it's a keyboard device with more reliable detection
+                    bool isKeyboard = deviceId.find("HID") != std::string::npos && 
+                                     (deviceId.find("Keyboard") != std::string::npos || 
+                                      deviceId.find("Vid_") != std::string::npos || 
+                                      deviceId.find("PID_") != std::string::npos);
+                                      
+                    if (isKeyboard) {
+                        std::cerr << "Keyboard device detected, checking authentication status..." << std::endl;
                         
                         if (!authenticator.IsDeviceBlocked(deviceId)) {
-                            bool success = authenticator.AuthenticateDevice(deviceId);
-                            if (!success) {
-                                authenticator.BlockDevice(deviceId);
+                            // Check if it's already trusted
+                            if (authenticator.IsKnownTrustedDevice(deviceId)) {
+                                std::cerr << "Device is already trusted" << std::endl;
+                                authenticator.NotifyListeners(AuthEvent::DEVICE_AUTHENTICATED, deviceId);
+                            } else {
+                                std::cerr << "Starting authentication for device..." << std::endl;
+                                bool success = authenticator.AuthenticateDevice(deviceId);
+                                if (!success) {
+                                    authenticator.BlockDevice(deviceId);
+                                }
                             }
                         } else {
                             // Device is blocked, notify user
@@ -432,6 +449,18 @@ void DeviceAuthenticator::Start()
     
     RegisterClassEx(&wcex);
     
+    // Register a proper window class for the authentication dialog
+    WNDCLASSEX authDlgClass = {0};
+    authDlgClass.cbSize = sizeof(WNDCLASSEX);
+    authDlgClass.style = CS_HREDRAW | CS_VREDRAW;
+    authDlgClass.lpfnWndProc = AuthenticationDialogProc;
+    authDlgClass.hInstance = GetModuleHandle(nullptr);
+    authDlgClass.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    authDlgClass.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+    authDlgClass.lpszClassName = "AuthDlgClass";
+    
+    RegisterClassEx(&authDlgClass);
+    
     // Create a hidden window to receive device notifications
     messageWindow = CreateWindow(DEVICE_WINDOW_CLASS, "USB Device Monitor", 
                                 WS_OVERLAPPED, 0, 0, 0, 0, 
@@ -462,10 +491,11 @@ void DeviceAuthenticator::Stop()
 
 void DeviceAuthenticator::RegisterDeviceNotifications()
 {
-    // Set up the device interface class guid for HIDs (which includes keyboards)
+    // Set up the device interface class guid for USB devices
     DEV_BROADCAST_DEVICEINTERFACE notificationFilter = {0};
     notificationFilter.dbcc_size = sizeof(notificationFilter);
     notificationFilter.dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE;
+    // Handle every USB device arrival (we'll check "is it a keyboard?" in WM_DEVICECHANGE)
     notificationFilter.dbcc_classguid = GUID_DEVINTERFACE_KEYBOARD;
     
     deviceNotifyHandle = RegisterDeviceNotification(
@@ -473,6 +503,13 @@ void DeviceAuthenticator::RegisterDeviceNotifications()
         &notificationFilter,
         DEVICE_NOTIFY_WINDOW_HANDLE
     );
+    
+    if (!deviceNotifyHandle) {
+        DWORD error = GetLastError();
+        std::cerr << "Failed to register for device notifications. Error: " << error << std::endl;
+    } else {
+        std::cerr << "Successfully registered for USB device notifications" << std::endl;
+    }
 }
 
 void DeviceAuthenticator::EnumerateExistingDevices()
@@ -636,17 +673,21 @@ bool DeviceAuthenticator::AuthenticateDevice(const std::string& deviceId)
     currentAuthCode = authCode;
     
     // Show the authentication dialog with the 6-digit code
+    // Use our properly registered window class instead of "STATIC"
     HWND hDlg = CreateWindowEx(
         WS_EX_DLGMODALFRAME | WS_EX_TOPMOST,
-        "STATIC",
+        "AuthDlgClass",  // Use our proper window class
         "USB Device Authentication",
         WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
-        CW_USEDEFAULT, CW_USEDEFAULT, 400, 250,
+        CW_USEDEFAULT, CW_USEDEFAULT, 500, 350,  // Increased from 400x250 to 500x350
         messageWindow, nullptr, GetModuleHandle(nullptr), nullptr
     );
     
     if (!hDlg) {
-        // If dialog creation failed, try simpler method
+        // If dialog creation failed, log the error and try simpler method
+        DWORD error = GetLastError();
+        std::cerr << "Failed to create authentication dialog window. Error: " << error << std::endl;
+        
         authenticationInProgress = false;
         bool userOk = PromptUserForAuthentication(messageWindow, deviceName, authCode);
         
@@ -676,7 +717,7 @@ bool DeviceAuthenticator::AuthenticateDevice(const std::string& deviceId)
     
     SetWindowPos(hDlg, nullptr, newX, newY, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
     
-    // Create the message text
+    // Create the message text with larger margins for better readability
     std::string message = "A new USB keyboard device needs authentication:\n\n";
     message += "Device Name: " + deviceName + "\n";
     
@@ -689,16 +730,16 @@ bool DeviceAuthenticator::AuthenticateDevice(const std::string& deviceId)
     CreateWindowEx(
         0, "STATIC", message.c_str(),
         WS_CHILD | WS_VISIBLE | SS_LEFT,
-        20, 20, 360, 100, hDlg, nullptr, GetModuleHandle(nullptr), nullptr
+        30, 30, 440, 110, hDlg, nullptr, GetModuleHandle(nullptr), nullptr
     );
     
     // Create the authentication code display with larger font
     HWND hCodeText = CreateWindowEx(0, "STATIC", authCode.c_str(),
                                    WS_CHILD | WS_VISIBLE | SS_CENTER,
-                                   20, 120, 360, 40, hDlg, nullptr, GetModuleHandle(nullptr), nullptr);
+                                   30, 150, 440, 60, hDlg, nullptr, GetModuleHandle(nullptr), nullptr);
     
     // Create a larger font for the code
-    HFONT hFont = CreateFont(36, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+    HFONT hFont = CreateFont(48, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,  // Increased from 36 to 48
                             DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
                             CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Arial");
     SendMessage(hCodeText, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -706,18 +747,25 @@ bool DeviceAuthenticator::AuthenticateDevice(const std::string& deviceId)
     // Create status text that will show the input as it's typed
     HWND hStatusText = CreateWindowEx(0, "STATIC", "Input: ",
                                      WS_CHILD | WS_VISIBLE | SS_LEFT,
-                                     20, 170, 360, 20, hDlg, nullptr, GetModuleHandle(nullptr), nullptr);
+                                     30, 230, 440, 30, hDlg, nullptr, GetModuleHandle(nullptr), nullptr);
     
-    // Create cancel button
+    // Create a font for the status text (make it larger too)
+    HFONT hStatusFont = CreateFont(24, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+                                  DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                                  CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Arial");
+    SendMessage(hStatusText, WM_SETFONT, (WPARAM)hStatusFont, TRUE);
+    
+    // Create cancel button - made larger and positioned lower
     HWND hCancel = CreateWindowEx(0, "BUTTON", "Cancel",
                                  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                 150, 200, 100, 30, hDlg, (HMENU)IDCANCEL, GetModuleHandle(nullptr), nullptr);
+                                 200, 280, 120, 40, hDlg, (HMENU)IDCANCEL, GetModuleHandle(nullptr), nullptr);
     
     // Store the dialog handle and this pointer
     SetProp(hDlg, "StatusText", (HANDLE)hStatusText);
     SetProp(hDlg, "DeviceAuthenticator", (HANDLE)this);
     SetProp(hDlg, "AuthCode", _strdup(authCode.c_str()));
     SetProp(hDlg, "DeviceId", _strdup(deviceId.c_str()));
+    SetProp(hDlg, "StatusFont", hStatusFont);
     
     // Set the window procedure using our static function
     SetWindowLongPtr(hDlg, GWLP_WNDPROC, (LONG_PTR)AuthenticationDialogProc);
