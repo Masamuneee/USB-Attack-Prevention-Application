@@ -28,6 +28,11 @@ jobs:
     - name: Set up MSVC
       uses: microsoft/setup-msbuild@v1.3.2
 
+    - name: Create icon file
+      run: |
+        echo "Creating placeholder icon file"
+        New-Item -Path "usb_application.ico" -ItemType "file" -Force
+
     - name: Create Build Directory
       run: mkdir build
 

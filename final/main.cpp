@@ -33,6 +33,11 @@ void InitializeApplication()
 // Windows GUI application entry point
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
+    // Silence unused parameter warnings
+    (void)hInstance;
+    (void)hPrevInstance;
+    (void)nCmdShow;
+    
     // Check for test mode (used by CI/CD)
     if (lpCmdLine && strstr(lpCmdLine, "--test-mode") != nullptr) {
         // In test mode, just initialize and exit immediately

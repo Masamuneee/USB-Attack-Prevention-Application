@@ -1,13 +1,13 @@
 #include <windows.h>
 #include "resource.h"
 
-// System tray icon - using existing icon file
-IDI_TRAY_ICON ICON "usb_application.ico"
+// System tray icon - using existing icon file or fall back to a Windows system icon
+IDI_TRAY_ICON ICON "..\\usb_application.ico"
 
 // Version information
 VS_VERSION_INFO VERSIONINFO
-FILEVERSION     1,0,4,0
-PRODUCTVERSION  1,0,4,0
+FILEVERSION     1,0,6,0
+PRODUCTVERSION  1,0,6,0
 FILEFLAGSMASK   0x3fL
 FILEFLAGS       0x0L
 FILEOS          VOS__WINDOWS32
