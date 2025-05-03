@@ -1,6 +1,6 @@
 # USB Attack Prevention Application
 
-**Version:** 1.0.5
+**Version:** 1.0.6
 **Author:** Masamune (Minh Pham) / Lio (Thai Do)
 
 ## Description

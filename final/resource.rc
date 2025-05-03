@@ -20,12 +20,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName",      "USB Security Research Team"
             VALUE "FileDescription",  "USB Device Security Monitor"
-            VALUE "FileVersion",      "1.0.5.0"
+            VALUE "FileVersion",      "1.0.6.0"
             VALUE "InternalName",     "usb_hooks"
             VALUE "LegalCopyright",   "© 2025 Masamune (Minh Pham) / Lio (Thai Do)"
             VALUE "OriginalFilename", "usb_hooks.exe"
             VALUE "ProductName",      "USB Attack Prevention Application"
-            VALUE "ProductVersion",   "1.0.5.0"
+            VALUE "ProductVersion",   "1.0.6.0"
         END
     END
     BLOCK "VarFileInfo"
