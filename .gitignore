@@ -16,3 +16,6 @@ final/*.log
 # Execution files
 *.exe
 final/*.exe
+
+# Data files
+*.dat
