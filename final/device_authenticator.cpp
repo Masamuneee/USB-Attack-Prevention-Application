@@ -338,9 +338,69 @@ static LRESULT CALLBACK AuthenticationDialogProc(HWND hwnd, UINT msg, WPARAM wPa
                     
                     // Close the dialog
                     DestroyWindow(hwnd);
+                } 
+                else if (strlen(input) == 6) {
+                    // If we have 6 digits but it doesn't match, it's an authentication failure
+                    // This helps prevent rubber ducky attacks that try to brute force by typing many digits
+                    pAuth = (DeviceAuthenticator*)GetProp(hwnd, "DeviceAuthenticator");
+                    deviceId = (const char*)GetProp(hwnd, "DeviceId");
+                    
+                    if (pAuth && deviceId) {
+                        // Call ProcessAuthInput with failure
+                        pAuth->ProcessAuthInput(input, deviceId);
+                    }
+                    
+                    // Close the dialog
+                    DestroyWindow(hwnd);
                 }
                 
                 free(input); // Free the allocated input string
+            }
+            return TRUE;
+
+        case WM_USER + 201: // Message for max input reached
+            // Update status to indicate max input reached
+            hStatus = (HWND)GetProp(hwnd, "StatusText");
+            if (hStatus) {
+                SetWindowTextA(hStatus, "MAX INPUT REACHED - Press Enter to submit or Backspace to correct");
+            }
+            
+            // Free the input string if provided
+            if (lParam) {
+                free((void*)lParam);
+            }
+            return TRUE;
+            
+        case WM_USER + 202: // Message for auto-verify when MAX_AUTH_INPUT_LENGTH reached
+            // Get the current auth code and input data
+            authCode = (const char*)GetProp(hwnd, "AuthCode");
+            input = _strdup((const char*)GetProp(hwnd, "CurrentInput"));
+            
+            if (authCode && input) {
+                // Check if auth is successful
+                if (strcmp(input, authCode) == 0) {
+                    // Authentication succeeded
+                    pAuth = (DeviceAuthenticator*)GetProp(hwnd, "DeviceAuthenticator");
+                    deviceId = (const char*)GetProp(hwnd, "DeviceId");
+                    
+                    if (pAuth && deviceId) {
+                        // Call ProcessAuthInput with success
+                        pAuth->ProcessAuthInput(input, deviceId);
+                    }
+                } else {
+                    // Auto-verification failed
+                    pAuth = (DeviceAuthenticator*)GetProp(hwnd, "DeviceAuthenticator");
+                    deviceId = (const char*)GetProp(hwnd, "DeviceId");
+                    
+                    if (pAuth && deviceId) {
+                        // Call ProcessAuthInput with failure
+                        pAuth->ProcessAuthInput(input, deviceId);
+                    }
+                }
+                
+                // Free the copied input and close the dialog
+                free(input);
+                DestroyWindow(hwnd);
             }
             return TRUE;
     }
@@ -766,6 +826,7 @@ bool DeviceAuthenticator::AuthenticateDevice(const std::string& deviceId)
     SetProp(hDlg, "AuthCode", _strdup(authCode.c_str()));
     SetProp(hDlg, "DeviceId", _strdup(deviceId.c_str()));
     SetProp(hDlg, "StatusFont", hStatusFont);
+    SetProp(hDlg, "CurrentInput", _strdup("")); // Add empty current input property
     
     // Set the window procedure using our static function
     SetWindowLongPtr(hDlg, GWLP_WNDPROC, (LONG_PTR)AuthenticationDialogProc);
@@ -826,12 +887,21 @@ bool DeviceAuthenticator::ProcessAuthInput(const std::string& input, const std::
         
         // Notify listeners
         NotifyListeners(AuthEvent::DEVICE_AUTHENTICATED, deviceId);
+        
+        // Show confirmation
+        std::string message = "Device authentication successful: " + knownDevices[deviceId].friendlyName;
+        MessageBoxA(nullptr, message.c_str(), "Authentication Successful", MB_OK | MB_ICONINFORMATION);
     } else {
         // Authentication failed
         authenticationAttempts[deviceId]++;
         
         // Notify listeners
         NotifyListeners(AuthEvent::DEVICE_AUTH_FAILED, deviceId);
+        
+        // Show error before ejecting
+        MessageBoxA(nullptr, 
+                   "Authentication failed. The device will be ejected.",
+                   "Authentication Failed", MB_OK | MB_ICONERROR);
         
         // Eject the device
         EjectDevice(deviceId);
